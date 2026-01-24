@@ -1,83 +1,135 @@
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 import { INITIAL_STATE } from '../types';
 import type { ProblemState, Solution, ActionStep } from '../types';
 
-const STORAGE_KEY = 'problem-solver-state';
-
 export function useProblemSolver() {
-    const [state, setState] = useState<ProblemState>(() => {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            try {
-                return JSON.parse(saved);
-            } catch (e) {
-                console.error('Failed to parse saved state', e);
-                return INITIAL_STATE;
-            }
-        }
-        return INITIAL_STATE;
-    });
+    const { user, isAuthenticated } = useAuth();
+    const [state, setState] = useState<ProblemState>(INITIAL_STATE);
+    const [projectId, setProjectId] = useState<string | null>(null);
 
+    // Cargar datos reales de Supabase si está autenticado
     useEffect(() => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }, [state]);
+        if (!isAuthenticated || !user) {
+            // Si no está autenticado, usar LocalStorage como fallback o empezar de cero
+            const saved = localStorage.getItem('problem-solver-state');
+            if (saved) {
+                try { setState(JSON.parse(saved)); } catch (e) { console.error(e); }
+            }
+            return;
+        }
 
-    const updateState = useCallback((updates: Partial<ProblemState>) => {
-        setState(prev => ({ ...prev, ...updates, updatedAt: new Date().toISOString() }));
-    }, []);
+        // Cargar proyecto desde Supabase
+        const fetchProject = async () => {
+            const { data, error } = await supabase
+                .from('projects')
+                .select('*, action_steps(*)')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
+
+            if (data) {
+                setProjectId(data.id);
+                setState({
+                    definition: data.definition || '',
+                    importance: data.importance || '',
+                    vision: data.vision || '',
+                    strategy: data.strategy || '',
+                    redefined: [], // Por ahora no persistimos esto o lo adaptamos
+                    rootCauses: [], // Debería ir en una tabla aparte si se quiere persistir
+                    solutions: [], // Debería ir en una tabla aparte
+                    selectedSolutionId: null,
+                    actionPlan: data.action_steps.map((s: any) => ({
+                        id: s.id,
+                        description: s.description,
+                        deadline: s.deadline,
+                        completed: s.completed
+                    })),
+                    startedAt: data.created_at,
+                    updatedAt: data.created_at,
+                    currentStep: 'definition'
+                });
+            } else if (error && error.code === 'PGRST116') {
+                // No existe proyecto todavía
+                setProjectId(null);
+            }
+        };
+
+        fetchProject();
+    }, [isAuthenticated, user]);
+
+    // Sincronizar cambios localmente
+    const updateState = useCallback(async (updates: Partial<ProblemState>) => {
+        const newState = { ...state, ...updates, updatedAt: new Date().toISOString() };
+        setState(newState);
+        localStorage.setItem('problem-solver-state', JSON.stringify(newState));
+
+        // Si hay proyecto real, sincronizar con Supabase
+        if (projectId && isAuthenticated) {
+            await supabase.from('projects').update({
+                definition: updates.definition || state.definition,
+                importance: updates.importance || state.importance,
+                vision: updates.vision || state.vision,
+                strategy: updates.strategy || state.strategy,
+            }).eq('id', projectId);
+        }
+    }, [state, projectId, isAuthenticated]);
+
+    // Función para guardar/crear proyecto inicial
+    const saveInitialDefinition = useCallback(async (definition: string) => {
+        if (isAuthenticated && user && !projectId) {
+            const { data, error } = await supabase
+                .from('projects')
+                .insert({ user_id: user.id, definition })
+                .select()
+                .single();
+            if (data) setProjectId(data.id);
+            if (error) console.error(error);
+        }
+        updateState({ definition });
+    }, [isAuthenticated, user, projectId, updateState]);
 
     const resetState = useCallback(() => {
         setState({ ...INITIAL_STATE, startedAt: new Date().toISOString() });
+        setProjectId(null);
+        localStorage.removeItem('problem-solver-state');
     }, []);
 
-    const setDefinition = useCallback((definition: string) => updateState({ definition }), [updateState]);
+    // Simplificación de acciones para esta fase de integración
+    const setDefinition = saveInitialDefinition;
     const setImportance = useCallback((importance: string) => updateState({ importance }), [updateState]);
     const setVision = useCallback((vision: string) => updateState({ vision }), [updateState]);
     const setStrategy = useCallback((strategy: string) => updateState({ strategy }), [updateState]);
 
-    const addRedefinition = useCallback((redef: string) => {
+    const addActionStep = useCallback(async (step: ActionStep) => {
+        setState(prev => ({ ...prev, actionPlan: [...prev.actionPlan, step] }));
+        if (projectId && isAuthenticated) {
+            await supabase.from('action_steps').insert({
+                project_id: projectId,
+                description: step.description,
+                deadline: step.deadline,
+                completed: step.completed
+            });
+        }
+    }, [projectId, isAuthenticated]);
+
+    const toggleActionStep = useCallback(async (id: string) => {
+        const step = state.actionPlan.find(s => s.id === id);
+        if (!step) return;
+
         setState(prev => ({
             ...prev,
-            redefined: [...prev.redefined, redef],
-            updatedAt: new Date().toISOString()
+            actionPlan: prev.actionPlan.map(s => s.id === id ? { ...s, completed: !s.completed } : s)
         }));
-    }, []);
 
-    const addRootCause = useCallback((cause: string) => {
-        setState(prev => ({
-            ...prev,
-            rootCauses: [...prev.rootCauses, cause],
-            updatedAt: new Date().toISOString()
-        }));
-    }, []);
-
-    const addSolution = useCallback((solution: Solution) => {
-        setState(prev => ({
-            ...prev,
-            solutions: [...prev.solutions, solution],
-            updatedAt: new Date().toISOString()
-        }));
-    }, []);
-
-    const selectSolution = useCallback((id: string) => updateState({ selectedSolutionId: id }), [updateState]);
-
-    const addActionStep = useCallback((step: ActionStep) => {
-        setState(prev => ({
-            ...prev,
-            actionPlan: [...prev.actionPlan, step],
-            updatedAt: new Date().toISOString()
-        }));
-    }, []);
-
-    const toggleActionStep = useCallback((id: string) => {
-        setState(prev => ({
-            ...prev,
-            actionPlan: prev.actionPlan.map(step =>
-                step.id === id ? { ...step, completed: !step.completed } : step
-            ),
-            updatedAt: new Date().toISOString()
-        }));
-    }, []);
+        if (projectId && isAuthenticated) {
+            await supabase.from('action_steps')
+                .update({ completed: !step.completed })
+                .eq('id', id);
+        }
+    }, [state.actionPlan, projectId, isAuthenticated]);
 
     return {
         state,
@@ -88,10 +140,10 @@ export function useProblemSolver() {
             setImportance,
             setVision,
             setStrategy,
-            addRedefinition,
-            addRootCause,
-            addSolution,
-            selectSolution,
+            addRedefinition: (redef: string) => updateState({ redefined: [...state.redefined, redef] }),
+            addRootCause: (cause: string) => updateState({ rootCauses: [...state.rootCauses, cause] }),
+            addSolution: (sol: Solution) => updateState({ solutions: [...state.solutions, sol] }),
+            selectSolution: (id: string) => updateState({ selectedSolutionId: id }),
             addActionStep,
             toggleActionStep
         }

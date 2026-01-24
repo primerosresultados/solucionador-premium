@@ -52,7 +52,7 @@ export function CausesStep() {
                                 onChange={(e) => setNewCause(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleAddCause()}
                                 placeholder="Ej: Procesos de comunicación fragmentados..."
-                                className="flex-1 bg-neutral-50 dark:bg-neutral-950 border border-neutral-100 dark:border-neutral-900 rounded-[24px] px-8 py-6 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-300 dark:placeholder:text-neutral-700 focus:outline-none focus:border-purple-500/50 transition-all text-xl font-bold tracking-tight shadow-inner"
+                                className="flex-1 border border-neutral-100 dark:border-neutral-900 rounded-[24px] px-8 py-6 placeholder:text-neutral-300 dark:placeholder:text-neutral-700 focus:outline-none focus:border-purple-500/50 transition-all text-xl font-bold tracking-tight shadow-inner"
                             />
                             <button
                                 onClick={handleAddCause}

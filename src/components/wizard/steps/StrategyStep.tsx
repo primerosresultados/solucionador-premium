@@ -78,8 +78,8 @@ export function StrategyStep() {
                     <button
                         onClick={startListening}
                         className={`flex items-center gap-3 px-6 py-3 rounded-2xl transition-all border-2 ${isListening
-                                ? `bg-red-500/10 border-red-500 text-red-600 dark:text-red-500 animate-pulse shadow-[0_0_30px_rgba(239,68,68,0.3)]`
-                                : `bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400 hover:border-amber-500 dark:hover:border-white shadow-inner`
+                            ? `bg-red-500/10 border-red-500 text-red-600 dark:text-red-500 animate-pulse shadow-[0_0_30px_rgba(239,68,68,0.3)]`
+                            : `bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400 hover:border-amber-500 dark:hover:border-white shadow-inner`
                             }`}
                     >
                         {isListening ? <MicOff size={18} /> : <Mic size={18} />}
@@ -93,7 +93,7 @@ export function StrategyStep() {
                     value={strategy}
                     onChange={(e) => setStrategy(e.target.value)}
                     placeholder="Ej: Automatizaré el proceso de captura y delegaré la revisión a mi equipo para liberar 5 horas semanales..."
-                    className="w-full h-64 bg-neutral-50 dark:bg-neutral-950 border border-neutral-100 dark:border-neutral-900 rounded-[32px] p-10 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-300 dark:placeholder:text-neutral-700 focus:outline-none focus:border-amber-500/50 transition-all resize-none text-2xl font-bold tracking-tight leading-relaxed shadow-inner"
+                    className="w-full h-64 border border-neutral-100 dark:border-neutral-900 rounded-[32px] p-10 placeholder:text-neutral-300 dark:placeholder:text-neutral-700 focus:outline-none focus:border-amber-500/50 transition-all resize-none text-2xl font-bold tracking-tight leading-relaxed shadow-inner"
                 />
             </div>
 

@@ -49,8 +49,8 @@ export function DefinitionStep() {
             <button
                 onClick={() => startListening(field)}
                 className={`flex items-center gap-3 px-6 py-3 rounded-2xl transition-all border-2 ${active
-                        ? `bg-red-500/10 border-red-500 text-red-600 dark:text-red-500 animate-pulse shadow-[0_0_30px_rgba(239,68,68,0.3)]`
-                        : `bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400 hover:border-cyan-500 dark:hover:border-cyan-500 hover:text-cyan-600 dark:hover:text-white shadow-sm`
+                    ? `bg-red-500/10 border-red-500 text-red-600 dark:text-red-500 animate-pulse shadow-[0_0_30px_rgba(239,68,68,0.3)]`
+                    : `bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400 hover:border-cyan-500 dark:hover:border-cyan-500 hover:text-cyan-600 dark:hover:text-white shadow-sm`
                     }`}
             >
                 {active ? <MicOff size={18} /> : <Mic size={18} />}
@@ -91,7 +91,7 @@ export function DefinitionStep() {
                             value={definition}
                             onChange={(e) => setDefinition(e.target.value)}
                             placeholder="¿Qué está pasando exactamente? Describe la fricción..."
-                            className="w-full h-48 bg-neutral-50 dark:bg-neutral-950 border border-neutral-100 dark:border-neutral-900 rounded-[28px] p-8 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-300 dark:placeholder:text-neutral-700 focus:outline-none focus:border-cyan-500/50 transition-all resize-none text-2xl font-bold tracking-tight leading-relaxed shadow-inner"
+                            className="w-full h-48 border border-neutral-100 dark:border-neutral-900 rounded-[28px] p-8 placeholder:text-neutral-300 dark:placeholder:text-neutral-700 focus:outline-none focus:border-cyan-500/50 transition-all resize-none text-2xl font-bold tracking-tight leading-relaxed shadow-inner"
                         />
                     </div>
                 </section>
@@ -109,7 +109,7 @@ export function DefinitionStep() {
                             value={importance}
                             onChange={(e) => setImportance(e.target.value)}
                             placeholder="¿Por qué es vital resolver esto ahora?"
-                            className="w-full h-32 bg-neutral-50 dark:bg-neutral-950 border border-neutral-100 dark:border-neutral-900 rounded-[24px] p-6 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-300 dark:placeholder:text-neutral-700 focus:outline-none focus:border-pink-500/50 transition-all resize-none text-lg font-bold leading-relaxed shadow-inner"
+                            className="w-full h-32 border border-neutral-100 dark:border-neutral-900 rounded-[24px] p-6 placeholder:text-neutral-300 dark:placeholder:text-neutral-700 focus:outline-none focus:border-pink-500/50 transition-all resize-none text-lg font-bold leading-relaxed shadow-inner"
                         />
                     </section>
 
@@ -125,7 +125,7 @@ export function DefinitionStep() {
                             value={vision}
                             onChange={(e) => setVision(e.target.value)}
                             placeholder="¿Cómo se siente la victoria?"
-                            className="w-full h-32 bg-neutral-50 dark:bg-neutral-950 border border-neutral-100 dark:border-neutral-900 rounded-[24px] p-6 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-300 dark:placeholder:text-neutral-700 focus:outline-none focus:border-emerald-500/50 transition-all resize-none text-lg font-bold leading-relaxed shadow-inner"
+                            className="w-full h-32 border border-neutral-100 dark:border-neutral-900 rounded-[24px] p-6 placeholder:text-neutral-300 dark:placeholder:text-neutral-700 focus:outline-none focus:border-emerald-500/50 transition-all resize-none text-lg font-bold leading-relaxed shadow-inner"
                         />
                     </section>
                 </div>

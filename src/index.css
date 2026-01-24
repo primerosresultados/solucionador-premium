@@ -17,6 +17,7 @@
   --text-muted: #64748b;
   --border-main: #e2e8f0;
   --bg-card: #ffffff;
+  --bg-input: #f8fafc;
 
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -29,6 +30,8 @@
   --text-muted: #94a3b8;
   --border-main: #1e293b;
   --bg-card: #0f172a;
+  --bg-input: #050505;
+  color-scheme: dark;
 }
 
 /* Modern Reset & Base Styles */
@@ -42,6 +45,19 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Universal Input/Textarea Visibility Fix */
+input,
+textarea {
+  background-color: var(--bg-input) !important;
+  color: var(--text-main) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.5;
+}
+
 /* High-priority override for title visibility in dark mode */
 h1,
 h2,
@@ -50,20 +66,6 @@ h4,
 h5,
 h6 {
   color: var(--text-main) !important;
-}
-
-/* Force dark mode utility classes to work with .dark class in Tailwind v4 */
-/* If v4 isn't picking up .dark by default, we can bridge it here */
-.dark .text-neutral-900 {
-  color: #f8fafc !important;
-}
-
-.dark .bg-white {
-  background-color: #0f172a !important;
-}
-
-.dark .border-neutral-200 {
-  border-color: #1e293b !important;
 }
 
 /* Glassmorphism */

@@ -56,7 +56,7 @@ export function BrainstormStep() {
                                 onChange={(e) => setDesc(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
                                 placeholder="¿Qué podríamos intentar? Registra todo..."
-                                className="flex-1 bg-neutral-50 dark:bg-neutral-950 border border-neutral-100 dark:border-neutral-900 rounded-[24px] px-8 py-6 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-300 dark:placeholder:text-neutral-700 focus:outline-none focus:border-yellow-500/50 transition-all text-xl font-bold tracking-tight shadow-inner"
+                                className="flex-1 border border-neutral-100 dark:border-neutral-900 rounded-[24px] px-8 py-6 placeholder:text-neutral-300 dark:placeholder:text-neutral-700 focus:outline-none focus:border-yellow-500/50 transition-all text-xl font-bold tracking-tight shadow-inner"
                             />
                             <button
                                 onClick={handleAdd}

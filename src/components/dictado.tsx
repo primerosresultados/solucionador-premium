@@ -1,7 +1,7 @@
 "use client";
 
 import { Mic, Square } from "lucide-react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type Resultado = { isFinal: boolean; 0: { transcript: string } };
@@ -97,6 +97,14 @@ export function CajaRelato({ valor, alCambiar, etiqueta, placeholder, filas = 3,
             maxLength={6000} placeholder={activo ? "Te escucho…" : placeholder}
             className="block w-full resize-none bg-transparent px-3 pt-2.5 pb-2 text-[19px] sm:text-[20px] leading-[1.35] tracking-[-.01em] placeholder:text-[#5d6170] outline-none" />
         </div>
+        <AnimatePresence initial={false}>
+          {(valor.length > 0 || activo) && (
+            <motion.p initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: .28, ease: [.22, 1, .36, 1] }}
+              className="overflow-hidden px-3 text-[15px] leading-snug text-[#4a4e57]">
+              <span className="block pb-2.5"><strong className="font-semibold text-[#15171c]">Solo sigue si estás 100% comprometido a cumplir el plan.</strong> Si no, sigue viendo Instagram.</span>
+            </motion.p>
+          )}
+        </AnimatePresence>
         <div className="mt-1 flex items-stretch gap-2">
           <BotonVoz activo={activo} alternar={alternar} className="h-14 min-w-[56px] px-4 sm:px-5 text-[16px]" />
           {children}

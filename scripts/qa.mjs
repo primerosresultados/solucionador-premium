@@ -66,7 +66,10 @@ await p.addInitScript(() => {
   };
 });
 await p.goto(APP); await p.waitForTimeout(600);
+assert.equal(await p.getByText("sigue viendo Instagram").count(), 0);
 await p.getByRole("button", { name: "Hablar", exact: true }).first().click();
+await p.getByText("sigue viendo Instagram").first().waitFor();
+ok("el compromiso aparece recién al empezar a contarlo");
 await p.waitForFunction(() => document.querySelector("textarea").value.includes("no queda plata"));
 await p.getByRole("button", { name: "Terminar de dictar" }).first().click();
 const dictado = await p.getByLabel("Escribe lo que te tiene dando vueltas").first().inputValue();

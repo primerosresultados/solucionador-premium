@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowUpRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -15,12 +16,14 @@ export function Entrada({ destino, id }: { destino: string; id: string }) {
     router.push(destino);
   };
   return (
-    <form onSubmit={empezar} className="rounded-[26px] bg-papel p-2.5 text-[#15171c] shadow-[0_24px_60px_-24px_rgba(5,10,60,.7)]">
+    <form onSubmit={empezar} className="rounded-[26px] bg-white/[.07] p-2 backdrop-blur-xl ring-1 ring-white/15 shadow-[0_30px_80px_-30px_rgba(0,0,0,.9)] transition-shadow focus-within:ring-sol/70">
       <label htmlFor={id} className="sr-only">Escribe lo que te tiene dando vueltas</label>
-      <textarea id={id} rows={3} value={texto} onChange={(e) => setTexto(e.target.value)} maxLength={6000}
-        placeholder="Escribe aquí lo que te tiene dando vueltas…"
-        className="block w-full resize-none bg-transparent px-3.5 pt-3 pb-2 text-[18px] leading-snug placeholder:text-[#5d6170] outline-none" />
-      <button className="btn w-full !min-h-14 !text-[17px] bg-sol text-sol-tinta hover:brightness-105">Empezar a resolverlo</button>
+      <textarea id={id} rows={2} value={texto} onChange={(e) => setTexto(e.target.value)} maxLength={6000}
+        placeholder="¿Qué te tiene dando vueltas?"
+        className="block w-full resize-none bg-transparent px-3.5 pt-2.5 pb-2 text-[18px] leading-snug text-inherit placeholder:text-current placeholder:opacity-60 outline-none" />
+      <button className="group btn w-full !min-h-[54px] !text-[17px] bg-sol text-sol-tinta hover:-translate-y-px shadow-[0_10px_30px_-10px_rgba(255,200,61,.7)]">
+        Empezar a resolverlo <ArrowUpRight size={19} className="transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+      </button>
     </form>
   );
 }

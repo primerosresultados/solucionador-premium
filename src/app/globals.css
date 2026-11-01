@@ -23,8 +23,10 @@
   /* Portada: no cambian con el modo oscuro, son una escena fija */
   --color-cobalto: #1c32c9;
   --color-cobalto-2: #bcc6ff;
-  --color-noche: #0d1340;
-  --color-noche-2: #1b2360;
+  --color-noche: #070a24;
+  --color-noche-2: #141a4a;
+  --color-noche-3: #232c78;
+  --color-luz: #8ea0ff;
   --color-sol: #ffc83d;
   --color-sol-tinta: #1a1605;
   --color-papel: #fdfcf9;
@@ -127,6 +129,48 @@
 @keyframes hilo-trazo { to { stroke-dashoffset: 0; } }
 @keyframes hilo-sol { to { transform: scale(1); } }
 
+/* Escena fija oscura: reasigna los tokens para lo que vive adentro */
+.escena-noche {
+  --color-superficie: #10153d;
+  --color-hundido: #1c2359;
+  --color-tinta: #f4f4fb;
+  --color-tinta-2: #bcc3ec;
+  --color-tinta-3: #8c94c8;
+  --color-acento: #8ea0ff;
+  --color-acento-tinta: #070a24;
+  --color-acento-suave: #232c78;
+  background-color: var(--color-noche);
+  color: var(--color-tinta);
+}
+
+.grano { isolation: isolate; }
+.grano::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: .045; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Borde de luz que gira: lo que se vende lleva este borde */
+@property --giro { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.borde-luz { position: relative; isolation: isolate; border-radius: 28px; }
+.borde-luz::after { content: ""; position: absolute; inset: 1.5px; z-index: -1; border-radius: 26.5px; background: var(--color-noche-2); }
+.borde-luz::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: 28px;
+  background: conic-gradient(from var(--giro), var(--color-sol), var(--color-luz), #fff 30%, var(--color-cobalto), var(--color-sol));
+  animation: girar 6s linear infinite;
+}
+@keyframes girar { to { --giro: 360deg; } }
+
+.marquesina { display: flex; width: max-content; animation: deslizar var(--dur, 40s) linear infinite; }
+.marquesina-inversa { animation-direction: reverse; }
+@keyframes deslizar { to { transform: translateX(-50%); } }
+
+.brillo-texto {
+  background: linear-gradient(100deg, currentColor 30%, var(--color-sol) 50%, currentColor 70%) 0 0 / 240% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: barrer 2.2s linear infinite;
+}
+@keyframes barrer { to { background-position: -240% 0; } }
+
 @keyframes latido { 50% { opacity: .5; } }
 @keyframes aparecer { from { opacity: 0; transform: translateY(6px); } }
 @keyframes subir { from { transform: translateY(100%); } }
@@ -137,4 +181,5 @@
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .hilo { stroke-dashoffset: 0; }
   .hilo-sol { transform: scale(1); }
+  .brillo-texto { color: inherit; background: none; }
 }

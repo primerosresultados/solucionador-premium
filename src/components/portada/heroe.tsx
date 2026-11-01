@@ -33,7 +33,7 @@ export function Heroe({ destino }: { destino: string }) {
                 </span>
               ))}
             </h1>
-            <div className="mt-auto pb-7 sm:pb-10 grid lg:grid-cols-[1fr_1.15fr] gap-5 lg:gap-14 items-end">
+            <div className="mt-auto pb-7 sm:pb-10 grid lg:grid-cols-[1fr_1.15fr] gap-5 lg:gap-14 items-end max-lg:has-[textarea:not(:placeholder-shown)]:[&>p]:hidden max-lg:has-[button[aria-pressed=true]]:[&>p]:hidden">
               <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .8, ease: CURVA, delay: .55 }}
                 className="text-[18px] sm:text-[22px] leading-[1.35] text-tinta-2 max-w-[26em] [@media(max-height:760px)]:hidden">
                 Cuéntalo una vez. La IA hace el análisis, tú eliges lo que más te hace sentido y en minutos tienes un plan que te acompaña hasta resolverlo.

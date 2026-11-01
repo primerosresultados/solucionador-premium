@@ -176,6 +176,13 @@
 }
 @keyframes girar { to { --giro: 360deg; } }
 
+/* La barra de la historia es su propio reloj: pausarla detiene el avance */
+.relleno { width: 0; animation: llenar var(--d) linear forwards; }
+.relleno.lleno { width: 100%; animation: none; }
+.relleno-oculto { display: block; height: 0; width: 0; animation: llenar var(--d) linear forwards; }
+.pausado { animation-play-state: paused; }
+@keyframes llenar { to { width: 100%; } }
+
 .marquesina { display: flex; width: max-content; animation: deslizar var(--dur, 40s) linear infinite; }
 .marquesina-inversa { animation-direction: reverse; }
 @keyframes deslizar { to { transform: translateX(-50%); } }
@@ -198,4 +205,5 @@
   .hilo { stroke-dashoffset: 0; }
   .hilo-sol { transform: scale(1); }
   .brillo-texto { color: inherit; background: none; }
+  .relleno { width: 100%; }
 }

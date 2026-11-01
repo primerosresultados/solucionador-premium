@@ -1,7 +1,7 @@
 "use client";
 
-import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
-import { Check, Sparkles } from "lucide-react";
+import { AnimatePresence, motion, useInView } from "motion/react";
+import { Check, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { useRef, useState } from "react";
 import { Contador, CURVA, Medidor, Tecleo } from "@/components/movimiento/piezas";
 
@@ -14,34 +14,77 @@ const BEATS = [
   { etapa: "Seguimiento", titulo: "Y no te suelta.", texto: "Te dice qué sigue, mide el resultado y te busca si desapareces. Hasta verificar que no volvió.", P: Seguimiento },
 ];
 
-/** El producto contándose solo: el teléfono queda fijo y las pantallas cambian al bajar. */
+const DURACION = 7.5;
+
+/** El producto contándose solo. Avanza por su cuenta y cede el control apenas la persona lo toma. */
 export function Historia() {
   const ref = useRef<HTMLElement>(null);
+  const visible = useInView(ref, { amount: .45 });
   const [i, setI] = useState(0);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
-  useMotionValueEvent(scrollYProgress, "change", (v) => setI(Math.min(BEATS.length - 1, Math.floor(v * BEATS.length))));
+  const [encima, setEncima] = useState(false);
+  const [elegido, setElegido] = useState(false);
+  const corre = visible && !encima && !elegido;
+  const ir = (n: number) => { setI((n + BEATS.length) % BEATS.length); setElegido(true); };
   const b = BEATS[i];
+
   return (
-    <section ref={ref} id="como" className="escena-noche relative" style={{ height: `${BEATS.length * 90}svh` }} aria-label="Cómo funciona">
-      <div className="grano sticky top-0 h-svh overflow-hidden">
-        <div aria-hidden className="absolute inset-0 bg-[radial-gradient(50%_55%_at_72%_50%,#17248f,transparent_70%)]" />
-        <div className="contenedor relative z-10 h-full grid lg:grid-cols-[1fr_auto] gap-x-20 items-center content-center gap-y-5">
-          <div className="order-2 lg:order-1">
-            <div className="hidden lg:flex gap-1.5 mb-8" aria-hidden>
-              {BEATS.map((x, n) => (
-                <span key={x.etapa} className="h-1 w-10 rounded-full overflow-hidden bg-white/15"><motion.span className="block h-full bg-sol" animate={{ width: n <= i ? "100%" : "0%" }} transition={{ duration: .4 }} /></span>
-              ))}
-            </div>
+    <section ref={ref} id="como" className="escena-noche grano relative scroll-mt-16" aria-label="Cómo funciona">
+      <div aria-hidden className="absolute inset-0 bg-[radial-gradient(50%_55%_at_74%_50%,#17248f,transparent_70%)]" />
+      <div className="contenedor relative z-10 py-20 sm:py-28">
+        <div className="grid lg:grid-cols-[1fr_auto] gap-x-20 gap-y-6 lg:items-center">
+          <h2 className="lg:col-start-1 lg:self-end text-[38px] sm:text-[60px] leading-[1.03] tracking-[-.04em] max-w-[13em]">Cuatro decisiones y tienes tu plan.</h2>
+          <div role="tablist" aria-label="Pasos" className="hidden lg:block lg:col-start-1 lg:self-start lg:mt-4" onMouseEnter={() => setEncima(true)} onMouseLeave={() => setEncima(false)}>
+            {BEATS.map((x, n) => {
+              const activo = n === i;
+              return (
+                <button key={x.titulo} role="tab" aria-selected={activo} onClick={() => ir(n)} className="group relative block w-full text-left py-4 border-t border-white/10 last:border-b">
+                  <span aria-hidden className="absolute -top-px left-0 h-px overflow-hidden" style={{ width: "100%" }}>
+                    {activo && <span className={`relleno block h-full bg-sol ${corre ? "" : "pausado"} ${elegido ? "lleno" : ""}`} style={{ "--d": `${DURACION}s` } as React.CSSProperties} onAnimationEnd={() => setI((v) => (v + 1) % BEATS.length)} />}
+                  </span>
+                  <span className="flex items-baseline gap-3">
+                    <span className={`text-[14px] font-medium w-24 shrink-0 transition-colors ${activo ? "text-sol" : "text-tinta-3"}`}>{x.etapa}</span>
+                    <span className={`text-[24px] font-semibold tracking-[-.025em] leading-tight transition-colors ${activo ? "text-tinta" : "text-tinta-3 group-hover:text-tinta-2"}`}>{x.titulo}</span>
+                  </span>
+                  <AnimatePresence initial={false}>
+                    {activo && (
+                      <motion.span className="block overflow-hidden pl-[108px]" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: .28, ease: CURVA }}>
+                        <span className="block pt-2 text-[17px] leading-[1.4] text-tinta-2 max-w-[28em]">{x.texto}</span>
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </button>
+              );
+            })}
+          </div>
+
+          <motion.div className="justify-self-center touch-pan-y lg:col-start-2 lg:row-start-1 lg:row-span-2" drag="x" dragConstraints={{ left: 0, right: 0 }} dragElastic={.18}
+            onDragEnd={(_, d) => { if (Math.abs(d.offset.x) > 44) ir(i + (d.offset.x < 0 ? 1 : -1)); }}
+            onMouseEnter={() => setEncima(true)} onMouseLeave={() => setEncima(false)}>
+            <Telefono><AnimatePresence mode="wait"><motion.div key={i} className="h-full" initial={{ opacity: 0, scale: .97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.02 }} transition={{ duration: .22 }}><b.P /></motion.div></AnimatePresence></Telefono>
+          </motion.div>
+
+          <div className="lg:hidden">
             <AnimatePresence mode="wait">
-              <motion.div key={i} initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -18 }} transition={{ duration: .32, ease: CURVA }}>
+              <motion.div key={i} className="min-h-[136px]" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: .22, ease: CURVA }}>
                 <p className="text-[15px] font-medium text-sol">{b.etapa}</p>
-                <h3 className="mt-1.5 text-[34px] sm:text-[62px] leading-[1.02] tracking-[-.035em]">{b.titulo}</h3>
-                <p className="mt-3 text-[17px] sm:text-[21px] leading-[1.4] text-tinta-2 max-w-[27em]">{b.texto}</p>
+                <h3 className="mt-1 text-[27px] leading-[1.08] tracking-[-.03em]">{b.titulo}</h3>
+                <p className="mt-2 text-[17px] leading-[1.4] text-tinta-2">{b.texto}</p>
               </motion.div>
             </AnimatePresence>
-          </div>
-          <div className="order-1 lg:order-2 justify-self-center">
-            <Telefono><AnimatePresence mode="wait"><motion.div key={i} className="h-full" initial={{ opacity: 0, scale: .97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.02 }} transition={{ duration: .25 }}><b.P /></motion.div></AnimatePresence></Telefono>
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <div className="flex items-center" role="tablist" aria-label="Pasos">
+                {BEATS.map((x, n) => (
+                  <button key={x.titulo} role="tab" aria-selected={n === i} aria-label={x.titulo} onClick={() => ir(n)} className="h-11 w-8 grid place-items-center">
+                    <span className={`block h-1.5 rounded-full transition-all duration-200 ${n === i ? "w-5 bg-sol" : "w-1.5 bg-white/25"}`} />
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <button aria-label="Anterior" onClick={() => ir(i - 1)} className="size-11 grid place-items-center rounded-full bg-white/10"><ChevronLeft size={20} /></button>
+                <button aria-label="Siguiente" onClick={() => ir(i + 1)} className="size-11 grid place-items-center rounded-full bg-white/10"><ChevronRight size={20} /></button>
+              </div>
+            </div>
+            {!elegido && <span aria-hidden className={`relleno-oculto ${corre ? "" : "pausado"}`} style={{ "--d": `${DURACION}s` } as React.CSSProperties} onAnimationEnd={() => setI((v) => (v + 1) % BEATS.length)} key={i} />}
           </div>
         </div>
       </div>
@@ -51,10 +94,10 @@ export function Historia() {
 
 function Telefono({ children }: { children: React.ReactNode }) {
   return (
-    <div aria-hidden className="relative h-[min(52svh,640px)] lg:h-[min(82svh,660px)] aspect-[9/18.6] rounded-[42px] bg-[#0b0f33] p-[9px] ring-1 ring-white/20 shadow-[0_50px_120px_-30px_rgba(40,60,255,.65),inset_0_0_0_1px_rgba(255,255,255,.04)]">
+    <div aria-hidden className="relative h-[min(50svh,480px)] lg:h-[640px] aspect-[9/18.6] rounded-[42px] bg-[#0b0f33] p-[9px] ring-1 ring-white/20 shadow-[0_50px_120px_-30px_rgba(40,60,255,.65),inset_0_0_0_1px_rgba(255,255,255,.04)]">
       <div className="relative h-full overflow-hidden rounded-[34px] bg-[#f4f4f6] text-[#15171c]">
         <span className="absolute left-1/2 top-2 z-10 h-[20px] w-[78px] -translate-x-1/2 rounded-full bg-[#0b0f33]" />
-        <div className="h-full pt-9 px-3.5 text-[13px] leading-snug lg:[zoom:1.24] lg:pt-8">{children}</div>
+        <div className="h-full pt-9 pb-5 px-3.5 text-[13px] leading-snug lg:[zoom:1.24] lg:pt-8 [&>div>div]:min-h-full [&>div>div]:flex [&>div>div]:flex-col [&>div>div]:justify-center">{children}</div>
       </div>
     </div>
   );
@@ -72,19 +115,19 @@ function Encuadre() {
   const [listo, setListo] = useState(false);
   return (
     <div className="space-y-2.5">
-      <p className="font-semibold text-[18px] leading-tight">¿Qué está pasando?</p>
+      <p className="font-semibold text-[18px] leading-tight">Cuéntalo como te salga</p>
       <Tarjeta><p className="min-h-[76px]"><Tecleo velocidad={20} texto="Vendo harto pero a fin de mes no queda nada. Ya no sé dónde se va la plata y me tiene sin dormir." alTerminar={() => setListo(true)} /></p></Tarjeta>
       {listo && <Cae><Copiloto><p className="font-medium">Tu negocio vende, pero no sabes cuánto te deja cada venta.</p></Copiloto></Cae>}
-      {listo && <Cae i={1}><Tarjeta><p className="text-[#6f737c] text-[11px]">¿Qué más podría ser?</p><p className="mt-0.5">¿Mezclo mi plata con la del negocio?</p></Tarjeta></Cae>}
+      {listo && <Cae i={1}><Tarjeta><p className="text-[#6f737c] text-[11px]">También podría ser</p><p className="mt-0.5">Mezclo mi plata con la del negocio</p></Tarjeta></Cae>}
     </div>
   );
 }
 
 function Causas() {
-  const filas = [["Precios sin actualizar", "Suposición", false], ["Descuentos sin control", "Suposición", false], ["Retiros sin registrar", "Hecho", true], ["Costos que subieron", "Suposición", false]] as const;
+  const filas = [["Retiros sin registrar", "Lo dijiste", true], ["Precios sin actualizar", "Por comprobar", false], ["Descuentos sin control", "Por comprobar", false], ["Costos que subieron", "Por comprobar", false]] as const;
   return (
     <div className="space-y-2">
-      <p className="font-semibold text-[18px] leading-tight">¿Cómo llegó a pasar?</p>
+      <p className="font-semibold text-[18px] leading-tight">¿Dónde crees que está la causa?</p>
       {filas.map(([t, e, raiz], i) => (
         <Cae key={t} i={i}>
           <motion.div animate={raiz ? { backgroundColor: ["#ffffff", "#ffffff", "#1c32c9"], color: ["#15171c", "#15171c", "#ffffff"] } : undefined} transition={{ duration: 1.1, delay: .6 }} className="rounded-2xl bg-white p-2.5 flex items-center justify-between gap-2 shadow-[0_6px_16px_-10px_rgba(0,0,0,.25)]">
@@ -130,7 +173,7 @@ function Decision() {
 }
 
 function Plan() {
-  const pasos = [["A", "Separar las cuentas", "3 nov"], ["A", "Costear 10 productos", "10 nov"], ["A", "Subir precios", "20 nov"], ["B", "Eliminar descuentos", "25 nov"]];
+  const pasos = [["A", "Separar cuentas", "3 nov"], ["A", "Costear productos", "10 nov"], ["A", "Subir precios", "20 nov"], ["B", "Sin descuentos", "25 nov"]];
   return (
     <div className="space-y-2">
       <Tarjeta><p className="text-[#6f737c] text-[11px]">Meta</p><p className="font-semibold">Margen mensual de 6% a 18%</p><p className="text-[12px] text-[#6f737c]">Antes del 29 de enero</p></Tarjeta>

@@ -19,7 +19,7 @@ export function Heroe({ destino }: { destino: string }) {
   const pistaOp = useTransform(p, [0, .08], [1, 0]);
 
   return (
-    <section ref={ref} className="escena-noche relative h-[230svh]">
+    <section ref={ref} className="escena-noche relative h-[165svh]">
       <div className="grano sticky top-0 h-svh overflow-hidden">
         <div aria-hidden className="absolute inset-0 bg-[radial-gradient(70%_60%_at_18%_44%,#1b2bb0_0%,transparent_70%),radial-gradient(45%_40%_at_92%_46%,rgba(255,200,61,.14),transparent_70%)]" />
         <HiloLienzo progreso={p} centro={.455} />

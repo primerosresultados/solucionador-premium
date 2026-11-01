@@ -14,7 +14,7 @@ export function NavPortada({ conSesion }: { conSesion: boolean }) {
   return (
     <header className="fixed inset-x-0 top-0 z-40 pointer-events-none">
       <div className="contenedor pt-2.5">
-        <div className={`escena-noche !bg-transparent pointer-events-auto -mx-4 flex items-center justify-between gap-3 rounded-full h-[52px] pl-4 pr-1.5 transition-[background-color,box-shadow] duration-300 ${abajo ? "!bg-[#0b0f33cc] backdrop-blur-xl shadow-[0_12px_32px_-14px_rgba(0,0,0,.6)] ring-1 ring-white/10" : ""}`}>
+        <div style={{ backgroundColor: abajo ? "rgba(7, 10, 36, .86)" : "transparent" }} className={`escena-noche pointer-events-auto -mx-4 flex items-center justify-between gap-3 rounded-full h-[52px] pl-4 pr-1.5 transition-[background-color,box-shadow] duration-300 ${abajo ? "backdrop-blur-xl shadow-[0_12px_32px_-14px_rgba(0,0,0,.6)] ring-1 ring-white/10" : ""}`}>
           <Logo />
           <nav className="flex items-center gap-1" aria-label="Principal">
             <a href="#como" className="hidden md:inline-flex items-center px-3 min-h-11 text-[15px] font-medium text-tinta-2 hover:text-tinta transition-colors">Cómo funciona</a>

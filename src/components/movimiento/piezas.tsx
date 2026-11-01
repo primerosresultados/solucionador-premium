@@ -96,14 +96,18 @@ export function Tecleo({ texto, velocidad = 26, alTerminar }: { texto: string; v
   const termino = useRef(alTerminar);
   useEffect(() => { termino.current = alTerminar; });
   useEffect(() => {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { termino.current?.(); return; }
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setN(texto.length);
+      termino.current?.();
+      return;
+    }
     const i = setInterval(() => setN((x) => {
       if (x >= texto.length) { clearInterval(i); termino.current?.(); return x; }
       return x + 1;
     }), velocidad);
     return () => clearInterval(i);
   }, [texto, velocidad]);
-  const quieto = typeof window !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  return <>{quieto ? texto : texto.slice(0, n)}<span aria-hidden className={n >= texto.length || quieto ? "hidden" : "inline-block w-[2px] h-[1em] -mb-[.15em] ml-[1px] bg-current"} /></>;
+  return <>{texto.slice(0, n)}<span aria-hidden className={n >= texto.length ? "hidden" : "inline-block w-[2px] h-[1em] -mb-[.15em] ml-[1px] bg-current"} /></>;
 }
 

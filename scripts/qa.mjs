@@ -16,7 +16,7 @@ const correo = `ana${sello}@prueba.test`;
 
 const VIDEO = !!process.env.QA_VIDEO;
 const navegador = await chromium.launch({ slowMo: VIDEO ? 180 : 0 });
-const contexto = await navegador.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, ...(VIDEO ? { recordVideo: { dir: "qa/video", size: { width: 390, height: 844 } } } : {}) });
+const contexto = await navegador.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, reducedMotion: VIDEO ? "no-preference" : "reduce", ...(VIDEO ? { recordVideo: { dir: "qa/video", size: { width: 390, height: 844 } } } : {}) });
 const p = await contexto.newPage();
 const errores = [];
 p.on("pageerror", (e) => errores.push(`pageerror: ${e.message}`));
@@ -56,6 +56,7 @@ console.log("1. Cuenta y etapa gratis");
 await p.goto(APP); await p.waitForTimeout(3000); await p.screenshot({ path: "qa/capturas/01-pliegue.png" }); await cap("01-inicio"); await auditar("inicio");
 await p.getByRole("tab", { name: "Las deudas me ahogan" }).click();
 await p.getByText("Anotar cada deuda con su saldo y su tasa.").waitFor();
+await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(900);
 await p.getByLabel("Escribe lo que te tiene dando vueltas").first().fill("Mi negocio vende harto pero a fin de mes no queda plata y no entiendo dónde se va.");
 await p.getByRole("button", { name: "Empezar a resolverlo" }).first().click();
 await p.waitForURL("**/registro");
@@ -319,6 +320,18 @@ await p.getByRole("button", { name: "Volver" }).click();
   await v.locator("figure").screenshot({ path: "qa/capturas/p-grafico.png" });
   await v.locator("nav").first().screenshot({ path: "qa/capturas/p-regla.png" });
   await c.close();
+}
+{
+  for (const [nombre, opciones] of [["e", { viewport: { width: 1440, height: 900 } }], ["o", { viewport: { width: 1440, height: 900 }, colorScheme: "dark" }], ["m", { viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 }]]) {
+    const c = await navegador.newContext({ ...opciones, storageState: await contexto.storageState() });
+    const v = await c.newPage();
+    for (const [ruta, n] of [[`/app/caso/${casoId}/seguimiento`, "seguimiento"], [`/app/caso/${casoId}/5`, "decision"], [`/app/caso/${casoId}/2`, "definicion"], ["/app", "app"]]) {
+      await v.goto(`${APP}${ruta}`);
+      await v.waitForTimeout(1800);
+      await v.screenshot({ path: `qa/capturas/x-${nombre}-${n}.png`, fullPage: nombre !== "e" });
+    }
+    await c.close();
+  }
 }
 
 console.log("5. Seguridad");

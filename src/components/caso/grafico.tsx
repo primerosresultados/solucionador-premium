@@ -1,3 +1,6 @@
+"use client";
+
+import { motion } from "motion/react";
 import { diasEntre, fechaCorta } from "@/lib/fechas";
 type Punto = { fecha: string; valor: number };
 
@@ -14,12 +17,16 @@ export function GraficoIndicador({ base, objetivo, inicio, fin, puntos, unidad }
   const serie = [{ fecha: inicio, valor: base }, ...puntos];
   const linea = serie.map((p, i) => `${i ? "L" : "M"}${x(p.fecha).toFixed(1)} ${y(p.valor).toFixed(1)}`).join(" ");
   const ultimo = serie.at(-1)!;
+  const area = `${linea} L${x(ultimo.fecha).toFixed(1)} ${H} L${x(inicio).toFixed(1)} ${H} Z`;
 
   return (
     <figure>
       <svg viewBox={`0 0 ${A} ${H}`} className="w-full h-auto block" role="img" aria-label={`Indicador: de ${base} a ${ultimo.valor} ${unidad}; objetivo ${objetivo} ${unidad}`}>
         <line x1={x(inicio)} y1={y(base)} x2={x(fin)} y2={y(objetivo)} stroke="var(--color-tinta-3)" strokeWidth="2" strokeDasharray="2 7" strokeLinecap="round" />
-        <path d={linea} fill="none" stroke="var(--color-acento)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <defs><linearGradient id="area-indicador" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--color-acento)" stopOpacity=".24" /><stop offset="1" stopColor="var(--color-acento)" stopOpacity="0" /></linearGradient></defs>
+        {puntos.length > 0 && <motion.path d={area} fill="url(#area-indicador)" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: .9, delay: .4 }} />}
+        <motion.path d={linea} fill="none" stroke="var(--color-acento)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.1, ease: [.22, 1, .36, 1] }} />
+        <motion.circle cx={x(ultimo.fecha)} cy={y(ultimo.valor)} fill="var(--color-sol)" animate={{ r: [6, 15], opacity: [.55, 0] }} transition={{ duration: 1.8, repeat: Infinity }} />
         {serie.map((p) => (
           <circle key={`${p.fecha}${p.valor}`} cx={x(p.fecha)} cy={y(p.valor)} r="5" fill="var(--color-acento)" stroke="var(--color-superficie)" strokeWidth="2">
             <title>{`${fechaCorta(p.fecha)}: ${p.valor.toLocaleString("es-CL")} ${unidad}`}</title>

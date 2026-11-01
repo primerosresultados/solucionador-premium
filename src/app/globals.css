@@ -36,7 +36,7 @@
 
   --radius-tarjeta: 22px;
   --radius-control: 14px;
-  --shadow-suave: 0 6px 20px -10px rgba(21, 23, 28, .16);
+  --shadow-suave: 0 0 0 1px rgba(21, 23, 28, .04), 0 1px 2px rgba(21, 23, 28, .04), 0 14px 34px -18px rgba(21, 23, 28, .2);
   --shadow-hoja: 0 -12px 40px -12px rgba(21, 23, 28, .28);
   --ease-suave: cubic-bezier(.22, 1, .36, 1);
 }
@@ -61,7 +61,7 @@
     --color-contraste: #f1f0ec;
     --color-contraste-tinta: #15171c;
     --color-contraste-2: #4a4e57;
-    --shadow-suave: 0 6px 20px -10px rgba(0, 0, 0, .6);
+    --shadow-suave: 0 0 0 1px rgba(255, 255, 255, .06), 0 16px 36px -18px rgba(0, 0, 0, .7);
     --shadow-hoja: 0 -12px 40px -12px rgba(0, 0, 0, .7);
   }
 }
@@ -76,7 +76,7 @@
 }
 
 @layer components {
-  .tarjeta { background: var(--color-superficie); border-radius: var(--radius-tarjeta); box-shadow: var(--shadow-suave); padding: 20px; }
+  .tarjeta { background: var(--color-superficie); border-radius: var(--radius-tarjeta); box-shadow: var(--shadow-suave); padding: 22px; }
   @media (min-width: 640px) { .tarjeta { padding: 28px; } }
 
   .etiqueta { font-size: 12px; font-weight: 600; letter-spacing: .08em; color: var(--color-tinta-3); }
@@ -89,17 +89,29 @@
   }
   .btn:active { transform: scale(.98); }
   .btn:disabled { opacity: .5; cursor: not-allowed; }
-  .btn-1 { background: var(--color-acento); color: var(--color-acento-tinta); }
+  .btn-1 {
+    position: relative; overflow: hidden; color: var(--color-acento-tinta);
+    background: linear-gradient(180deg, color-mix(in oklab, var(--color-acento) 86%, white), var(--color-acento));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 10px 26px -12px var(--color-acento);
+  }
+  .btn-1:not(:disabled):hover { transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 14px 32px -12px var(--color-acento); }
+  .btn-1::after {
+    content: ""; position: absolute; inset: 0; transform: translateX(-120%);
+    background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.28) 50%, transparent 65%);
+    transition: transform 700ms var(--ease-suave);
+  }
+  .btn-1:not(:disabled):hover::after { transform: translateX(120%); }
   .btn-2 { background: var(--color-hundido); color: var(--color-tinta); }
+  .btn-2:not(:disabled):hover { background: color-mix(in oklab, var(--color-hundido) 88%, var(--color-tinta)); }
   .btn-3 { background: transparent; color: var(--color-tinta-2); padding: 0 12px; }
   .btn-chico { min-height: 44px; padding: 0 16px; font-size: 15px; }
 
   .campo {
     width: 100%; min-height: 48px; padding: 12px 14px; font-size: 16px; line-height: 1.5;
     background: var(--color-hundido); color: var(--color-tinta); border-radius: var(--radius-control);
-    border: 0; outline: 2px solid transparent; transition: outline-color 160ms var(--ease-suave);
+    border: 0; outline: 2px solid transparent; transition: outline-color 160ms var(--ease-suave), box-shadow 200ms var(--ease-suave), background-color 160ms;
   }
-  .campo:focus { outline-color: var(--color-acento); }
+  .campo:focus { outline-color: var(--color-acento); box-shadow: 0 0 0 5px var(--color-acento-suave); background: var(--color-superficie); }
   .campo::placeholder { color: var(--color-tinta-3); }
   textarea.campo { resize: vertical; display: block; }
 
@@ -117,7 +129,7 @@
     flex: 0 0 28px; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px;
     font-size: 13px; font-weight: 700; background: var(--color-hundido); color: var(--color-tinta-2);
   }
-  .prioridad-A { background: var(--color-acento); color: var(--color-acento-tinta); }
+  .prioridad-A { background: linear-gradient(160deg, var(--color-luz), var(--color-acento)); color: #fff; }
 
   .marca { flex: 0 0 26px; width: 26px; height: 26px; border-radius: 999px; display: grid; place-items: center; }
 

@@ -24,6 +24,8 @@ export function HiloLienzo({ progreso, centro = .5, compacto = false }: {
     const ctx = c.getContext("2d")!;
     const quieto = matchMedia("(prefers-reduced-motion: reduce)").matches;
     let W = 0, H = 0, raf = 0, visible = true;
+    // Un equipo lento pierde hebras antes que fluidez.
+    let calidad = 1, ultimo = 0, media = 16;
     const puntero = { x: -1, y: 0, fx: 0 };
 
     const medir = () => {
@@ -35,8 +37,8 @@ export function HiloLienzo({ progreso, centro = .5, compacto = false }: {
 
     const pintar = (t: number) => {
       const p = progreso.get(), angosto = W < 700;
-      const hebras = compacto ? 12 : angosto ? 16 : 30;
-      const tramos = compacto ? 340 : angosto ? 460 : 800;
+      const hebras = Math.max(5, Math.round((compacto ? 12 : angosto ? 16 : 30) * calidad));
+      const tramos = Math.max(160, Math.round((compacto ? 340 : angosto ? 460 : 800) * calidad));
       const vueltas = angosto || compacto ? 9 : 15;
       const R = Math.min(H * (compacto ? .3 : .19), angosto ? 96 : 150);
       const cy = H * centro;
@@ -86,6 +88,11 @@ export function HiloLienzo({ progreso, centro = .5, compacto = false }: {
 
     const inicio = performance.now();
     const ciclo = (ahora: number) => {
+      if (ultimo) {
+        media += (ahora - ultimo - media) * .08;
+        if (media > 24 && calidad > .35) { calidad *= .82; media = 16; }
+      }
+      ultimo = ahora;
       puntero.fx *= .96;
       pintar((ahora - inicio) / 1000);
       raf = visible ? requestAnimationFrame(ciclo) : 0;

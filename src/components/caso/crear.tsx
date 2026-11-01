@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus, X } from "lucide-react";
+import { motion } from "motion/react";
 import { useState } from "react";
 import {
   IDEA_NO_HACER_NADA, MIN_IDEAS, MIN_IDEAS_PROPIAS_PARA_COPILOTO, ideasPropias, puntajeOpcion, type Opcion, type Riesgo, type Trabajo,
@@ -31,18 +32,20 @@ export function Etapa4({ inicial, ...m }: Props) {
           </div>
           <p className="text-[15px] text-tinta-2 text-right max-w-[15em]">{t.ideas.length < 10 ? "Sin juzgar. Lo absurdo también cuenta." : "Las mejores suelen llegar ahora."}</p>
         </div>
-        <div className="mt-3 h-2 rounded-full bg-hundido overflow-hidden"><div className="h-full rounded-full bg-acento transition-[width] duration-200" style={{ width: `${pct}%` }} /></div>
+        <div className="mt-3 h-2.5 rounded-full bg-hundido overflow-hidden">
+          <motion.div className="h-full rounded-full bg-gradient-to-r from-acento to-sol" animate={{ width: `${pct}%` }} transition={{ type: "spring", stiffness: 120, damping: 20 }} />
+        </div>
         <form className="mt-4 flex gap-2" onSubmit={(e) => { e.preventDefault(); agregar(nueva); }}>
           <input className="campo" aria-label="Nueva idea" placeholder="Podría…" value={nueva} onChange={(e) => setNueva(e.target.value)} />
           <button aria-label="Agregar idea" className="btn btn-1 !px-0 w-12 shrink-0"><Plus size={20} /></button>
         </form>
         <ol className="mt-3">
           {t.ideas.map((i, n) => (
-            <li key={i.id} className="flex items-center gap-3 py-2 border-b border-hundido last:border-0">
+            <motion.li key={i.id} layout="position" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3 py-2 border-b border-hundido last:border-0">
               <span className="w-6 text-right text-[14px] text-tinta-3 tabular-nums shrink-0">{n + 1}</span>
               <span className="flex-1 min-w-0 leading-snug">{i.texto}</span>
               {i.origen !== "base" && <button type="button" aria-label="Quitar idea" className="btn btn-3 !min-h-9 !px-2" onClick={() => cambiar({ ideas: t.ideas.filter((x) => x.id !== i.id) })}><X size={16} /></button>}
-            </li>
+            </motion.li>
           ))}
         </ol>
       </section>
@@ -89,10 +92,13 @@ export function Etapa5({ inicial, ...m }: Props) {
       </section>
 
       {orden.map((o) => (
-        <section key={o.ideaId} className={`tarjeta ${t.decisionIdeaId === o.ideaId ? "outline-2 outline-acento" : ""}`}>
+        <motion.section layout="position" key={o.ideaId} className={`tarjeta ${t.decisionIdeaId === o.ideaId ? "outline-2 outline-acento" : ""}`}>
           <div className="flex items-start gap-3">
             <h3 className="flex-1 min-w-0 font-sans tracking-normal font-semibold text-[17px] leading-snug">{texto(o.ideaId)}</h3>
-            <p className="font-titulo font-semibold text-[32px] leading-none tabular-nums" aria-label={`Puntaje ${puntajeOpcion(o, t.criterios)} de 100`}>{puntajeOpcion(o, t.criterios)}</p>
+            <p className="font-titulo font-semibold text-[34px] leading-none tracking-[-.03em] tabular-nums" aria-label={`Puntaje ${puntajeOpcion(o, t.criterios)} de 100`}>{puntajeOpcion(o, t.criterios)}</p>
+          </div>
+          <div className="mt-2 h-1.5 rounded-full bg-hundido overflow-hidden">
+            <motion.div className="h-full rounded-full bg-gradient-to-r from-acento to-luz" animate={{ width: `${puntajeOpcion(o, t.criterios)}%` }} transition={{ type: "spring", stiffness: 140, damping: 22 }} />
           </div>
           <div className="mt-4 space-y-3">
             {t.criterios.map((c) => (
@@ -110,7 +116,7 @@ export function Etapa5({ inicial, ...m }: Props) {
           <button type="button" onClick={() => cambiar({ decisionIdeaId: o.ideaId })} className={`btn w-full mt-4 ${t.decisionIdeaId === o.ideaId ? "btn-1" : "btn-2"}`}>
             {t.decisionIdeaId === o.ideaId ? "Esta es mi decisión" : "Elegir esta"}
           </button>
-        </section>
+        </motion.section>
       ))}
 
       {t.decisionIdeaId && (

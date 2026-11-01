@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus, Rocket } from "lucide-react";
+import { celebrar } from "@/components/movimiento/celebracion";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { agregarPaso, aplicarPlanCopiloto, firmarCompromiso, guardarMeta } from "@/app/app/acciones";
@@ -167,6 +168,7 @@ export function Etapa9({ nombre, ritmoSugerido, ...m }: PropsMarco & { nombre: s
     setError("");
     const r = await firmarCompromiso(m.casoId, f);
     if (!r.ok) { setError(r.error); return; }
+    celebrar("Compromiso firmado", "Ahora empieza lo bueno");
     router.push(`/app/caso/${m.casoId}/seguimiento`);
   });
   return (

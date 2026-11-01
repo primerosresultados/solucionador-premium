@@ -93,7 +93,7 @@ await p.getByRole("button", { name: /^Agregar: Mi negocio/ }).click();
 await p.getByLabel("¿Qué pierdes si esto sigue igual un año más?").fill("Pierdo el negocio y la tranquilidad en la casa.");
 await p.waitForTimeout(900);
 await p.reload();
-assert.equal(await p.getByLabel("Dilo como una situación").inputValue(), "Mi negocio vende, pero a fin de mes no queda dinero disponible.");
+assert.equal(await p.getByLabel("Ahora resúmelo en una sola frase").inputValue(), "Mi negocio vende, pero a fin de mes no queda dinero disponible.");
 await p.getByText("Otras formas de leerlo").waitFor();
 ok("autoguardado y respuesta del copiloto sobreviven a recargar");
 await cap("02-etapa1");

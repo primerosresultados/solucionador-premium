@@ -137,7 +137,7 @@ export function faltantes(etapa: number, t: Trabajo): Falta[] {
   switch (etapa) {
     case 1:
       if (!lleno(t.relato, 30)) f.push({ campo: "relato", mensaje: "Cuenta lo que pasa con un poco más de detalle." });
-      if (!lleno(t.situacion, 10)) f.push({ campo: "situacion", mensaje: "Escribe la situación en una frase neutra." });
+      if (!lleno(t.situacion, 10)) f.push({ campo: "situacion", mensaje: "Resume en una sola frase lo que está pasando." });
       if (!lleno(t.importancia, 10)) f.push({ campo: "importancia", mensaje: "Di qué pierdes si esto sigue igual." });
       break;
     case 2:

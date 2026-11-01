@@ -19,8 +19,8 @@ export function Etapa1({ inicial, ...m }: Props) {
           <textarea className="campo" rows={6} value={t.relato} onChange={(e) => cambiar({ relato: e.target.value })} />
         </Campo>
         <Dictar alTexto={(x) => cambiar({ relato: `${t.relato} ${x}`.trim() })} />
-        <Campo etiqueta="Dilo como una situación" ayuda="Una frase neutra, sin culpables. No es «un desastre»: es algo que está pasando y tiene salida.">
-          <textarea className="campo" rows={2} value={t.situacion} onChange={(e) => cambiar({ situacion: e.target.value })} />
+        <Campo etiqueta="Ahora resúmelo en una sola frase" ayuda="Escribe solo lo que está pasando, sin culpar a nadie.">
+          <textarea className="campo" rows={2} placeholder="Ej: Mi negocio vende, pero a fin de mes no me queda plata." value={t.situacion} onChange={(e) => cambiar({ situacion: e.target.value })} />
         </Campo>
         <Campo etiqueta="¿Qué pierdes si esto sigue igual un año más?">
           <textarea className="campo" rows={3} value={t.importancia} onChange={(e) => cambiar({ importancia: e.target.value })} />

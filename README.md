@@ -1,73 +1,47 @@
-# React + TypeScript + Vite
+# Solucionador
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Producto para resolver un problema real con un método de 10 etapas, copiloto de IA y seguimiento hasta verificar que no volvió. Se paga por caso; la primera etapa es gratis.
 
-Currently, two official plugins are available:
+**Stack:** Next 16, React 19, TypeScript, Tailwind 4, Drizzle + Postgres, Claude (`@anthropic-ai/sdk`), Flow, Resend, Railway.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Correr en local
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+cp .env.example .env.local        # completar
+npx tsx scripts/migrar.ts
+npm run build && PORT=3090 npm start   # next dev da EMFILE en este Mac
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Sin claves reales: `npm run qa:servidores` levanta Flow y Anthropic falsos en `:4599`, y `.env.qa` apunta a ellos.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Recorrerlo a mano
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+`npm run build && npm run demo` y abrir http://localhost:3091. Crea una cuenta; el pago usa un Flow falso y el copiloto da respuestas fijas.
+
+## Verificar
+
+| Comando | Qué hace |
+|---|---|
+| `npm test` | Motor de salud y reglas del método |
+| `npm run qa` | Recorrido completo con Playwright: base limpia, pagos, seguridad, cron, cierre. Capturas en `qa/capturas` |
+| `QA_VIDEO=1 npm run qa` | Lo mismo, grabando video en `qa/video` |
+| `npm run probar:claude` | Prueba las 11 tareas del copiloto contra la API real. Gasta tokens |
+
+GitHub Actions está apagado: corre esto antes de un PR.
+
+## Publicar en Railway
+
+1. Servicio web con Postgres. Variables de `.env.example`, con `FLOW_ENV=production`.
+2. Migra solo al arrancar (`railway.json`).
+3. Servicio cron diario que llame `GET /api/cron/seguimiento` con `Authorization: Bearer $CRON_SECRET`, por ejemplo a las 12:00 UTC.
+4. Dominio verificado en Resend y `APP_URL` con https.
+
+## Dónde está cada cosa
+
+- `src/lib/metodo.ts`: las etapas y lo que exige cada una.
+- `src/lib/salud.ts`: motor de seguimiento, función pura.
+- `src/lib/ia/tareas.ts`: las 11 tareas del copiloto con su esquema.
+- `src/lib/compras.ts`: Flow y libro de créditos.
+- `src/app/app/acciones.ts`: todas las acciones del usuario.
+- `docs/`: método, contexto y decisiones.

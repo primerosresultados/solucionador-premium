@@ -5,6 +5,7 @@ import http from "node:http";
 
 const PUERTO = Number(process.env.PUERTO ?? 4599);
 const SECRETO = process.env.FLOW_SECRET_KEY ?? "secreto-falso";
+const PUBLICO = process.env.FLOW_PUBLICO ?? `http://localhost:${PUERTO}`;
 const pagos = new Map();
 let ultimoClaude = null;
 let modoClaude = "normal";
@@ -59,7 +60,7 @@ http.createServer(async (req, res) => {
     if (!firma(p)) return json(res, { code: 108, message: "firma inválida" }, 401);
     const token = `tok_${++n}_${Date.now()}`;
     pagos.set(token, { ...p, status: 1, flowOrder: n });
-    return json(res, { url: `http://localhost:${PUERTO}/pagar`, token, flowOrder: n });
+    return json(res, { url: `${PUBLICO}/pagar`, token, flowOrder: n });
   }
   if (url.pathname === "/api/payment/getStatus") {
     const p = Object.fromEntries(url.searchParams);

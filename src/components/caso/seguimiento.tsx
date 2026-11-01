@@ -14,7 +14,7 @@ import { ETIQUETA_SALUD, type Salud } from "@/lib/salud";
 import { celebrar } from "@/components/movimiento/celebracion";
 import { PanelHilo } from "@/components/movimiento/panel-hilo";
 import { Contador, Medidor } from "@/components/movimiento/piezas";
-import { FormPaso } from "./ejecutar";
+import { FormPaso } from "./formulario-paso";
 import { GraficoIndicador } from "./grafico";
 import { Alerta, ApoyoCuidado, Campo, Copiloto, Dictar } from "./piezas";
 
@@ -446,7 +446,7 @@ export function Seguimiento({ caso, pasos, revisiones, eventos, salud, hoy, sigu
         <>
           <button className="btn btn-3" disabled={accion.pendiente} onClick={() => accion.correr(() => pausar(caso.id, true))}><Pause size={16} /> Pausar este caso</button>
           <div className="fixed inset-x-0 bottom-0 z-20 bg-lienzo/90 backdrop-blur-md pb-[env(safe-area-inset-bottom)]">
-            <div className="mx-auto max-w-[1160px] px-5 py-3 flex items-center justify-between gap-3">
+            <div className="contenedor py-3 flex items-center justify-between gap-3">
               <p className="text-[14px] text-tinta-2 min-w-0 truncate">{caso.proximaRevision ? `Próxima revisión: ${fechaCorta(caso.proximaRevision)}` : ""}</p>
               <button className="btn btn-1" onClick={() => setHoja("revision")}>Hacer revisión</button>
             </div>

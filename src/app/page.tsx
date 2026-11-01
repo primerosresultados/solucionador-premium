@@ -6,6 +6,7 @@ import { Demo } from "@/components/portada/demo";
 import { Final } from "@/components/portada/final";
 import { Heroe } from "@/components/portada/heroe";
 import { Historia } from "@/components/portada/historia";
+import { NavPortada } from "@/components/portada/nav";
 import { leerSesion } from "@/lib/auth";
 import { PLANES, pesos } from "@/lib/planes";
 
@@ -14,11 +15,12 @@ const PREGUNTAS_COPILOTO = [
   "¿Cómo lo comprobarías esta semana?", "¿Qué tendría que ser cierto?", "¿Qué harías si no pudieras fallar?", "¿Qué dejarías de hacer?",
 ];
 
-const INCLUYE = ["Las 9 etapas restantes", "Copiloto en cada etapa", "Revisiones y recordatorios", "Resumen semanal por correo", "Compañero de compromiso", "Verificación a 30 días"];
+const INCLUYE = ["Veinte salidas analizadas", "Tu plan completo con plan B", "Revisiones y recordatorios", "Resumen semanal por correo", "Compañero de compromiso", "Verificación a 30 días"];
 
 const PREGUNTAS = [
   ["¿Sirve para problemas personales o de trabajo?", "Para ambos: una deuda, un negocio que no despega, un conflicto con un socio, una decisión de carrera. El método es el mismo y el copiloto trabaja con lo que tú cuentes."],
-  ["¿La IA me dice qué hacer?", "No. El copiloto cuestiona tu definición, muestra causas que no viste, agrega ideas y pone a prueba tu decisión. Tú aceptas o descartas cada cosa."],
+  ["¿La IA me dice qué hacer?", "Te propone y tú eliges. Analiza tu caso, te muestra el problema de fondo, las causas y las mejores salidas, y arma el plan. Tú decides qué se queda."],
+  ["¿Tengo que llenar formularios?", "No. Lo cuentas una vez con tus palabras y después solo eliges entre lo que te propone. Si algo no te calza, lo dices y vuelve a proponer."],
   ["¿Y si no termino?", "Tu caso no vence. Si desapareces te buscamos con un aviso, y puedes pausarlo cuando lo necesites."],
   ["¿Quién ve lo que escribo?", "Solo tú. Tu texto se procesa para que el copiloto te responda y no se usa para entrenar modelos."],
   ["¿Reemplaza a un profesional?", "No. En temas de salud, legales o financieros grandes te ayuda a preparar la consulta, no a evitarla."],
@@ -41,12 +43,13 @@ export default async function Inicio() {
   const destino = sesion ? "/app/nuevo" : "/registro";
   return (
     <div className="overflow-x-clip">
-      <Heroe destino={destino} conSesion={!!sesion} />
+      <NavPortada conSesion={!!sesion} />
+      <Heroe destino={destino} />
       <main>
         <section className="escena-noche">
-          <div className="mx-auto max-w-[1120px] px-5 sm:px-8 pt-16 pb-24 sm:pt-28 sm:pb-40">
+          <div className="contenedor pt-16 pb-24 sm:pt-28 sm:pb-40">
             <figure>
-              <PalabrasScroll className="font-semibold text-[40px] sm:text-[76px] leading-[1.04] tracking-[-.035em]" texto="«Pensar es el trabajo más duro que existe, y probablemente por eso hay tan pocos que lo hacen.»" />
+              <PalabrasScroll className="font-semibold text-[40px] sm:text-[76px] leading-[1.04] tracking-[-.035em] max-w-[17em]" texto="«Pensar es el trabajo más duro que existe, y probablemente por eso hay tan pocos que lo hacen.»" />
               <figcaption className="mt-6 text-[17px] text-tinta-3">Henry Ford, <cite className="not-italic">Mi vida y mi obra, 1922</cite></figcaption>
             </figure>
             <Aparece><p className="mt-12 text-[21px] sm:text-[26px] leading-[1.35] text-tinta-2 max-w-[28em]">Si llevas meses con lo mismo, no es falta de ganas. Te ha faltado una forma de pensarlo por escrito y a alguien que te siga hasta el final.</p></Aparece>
@@ -55,14 +58,14 @@ export default async function Inicio() {
 
         <Historia />
 
-        <section className="mx-auto max-w-[1280px] px-5 sm:px-8 py-20 sm:py-32">
+        <section className="contenedor py-20 sm:py-32">
           <Titulo className="text-[40px] sm:text-[72px] leading-[1.02] tracking-[-.04em] max-w-[12em]">El problema rara vez es el que crees.</Titulo>
           <p className="mt-3 mb-12 text-[19px] text-tinta-2">Elige un ejemplo y mira cómo cambia al trabajarlo.</p>
           <Demo />
         </section>
 
         <section className="pb-20 sm:pb-32 overflow-hidden" aria-label="Lo que pregunta el copiloto">
-          <div className="mx-auto max-w-[1280px] px-5 sm:px-8 mb-10">
+          <div className="contenedor mb-10">
             <Titulo className="text-[40px] sm:text-[72px] leading-[1.02] tracking-[-.04em]">Un copiloto que te exige.</Titulo>
             <p className="mt-3 text-[19px] text-tinta-2 max-w-[30em]">No te llena de consejos. Trabaja sobre lo que escribiste y te hace mejores preguntas.</p>
           </div>
@@ -74,16 +77,16 @@ export default async function Inicio() {
 
         <Citas />
 
-        <section className="mx-auto max-w-[1280px] px-5 sm:px-8 py-20 sm:py-32">
+        <section className="contenedor py-20 sm:py-32">
           <Titulo className="mb-10 text-[40px] sm:text-[72px] leading-[1.02] tracking-[-.04em]">Esto no es un chat más.</Titulo>
           <Confianza />
         </section>
 
         <section id="precio" className="escena-noche grano relative scroll-mt-6">
-          <div className="relative z-10 mx-auto max-w-[1280px] px-5 sm:px-8 py-20 sm:py-32 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="contenedor relative z-10 py-20 sm:py-32 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div>
               <Titulo className="text-[40px] sm:text-[72px] leading-[1.02] tracking-[-.04em]">Pagas por problema. Sin mensualidad.</Titulo>
-              <p className="mt-5 text-[19px] leading-relaxed text-tinta-2 max-w-[27em]">La primera etapa es gratis. Si sigues, pagas una vez y tienes todo hasta resolverlo.</p>
+              <p className="mt-5 text-[19px] leading-relaxed text-tinta-2 max-w-[27em]">El diagnóstico es gratis: ves el problema de fondo y su causa antes de pagar. Si sigues, pagas una vez y tienes todo hasta resolverlo.</p>
               <ul className="mt-7 grid sm:grid-cols-2 gap-x-6 gap-y-2 text-[16px]">
                 {INCLUYE.map((x) => <li key={x} className="flex gap-2.5 items-center"><span aria-hidden className="size-1.5 rounded-full bg-sol" />{x}</li>)}
               </ul>
@@ -105,9 +108,9 @@ export default async function Inicio() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-[820px] px-5 sm:px-8 py-20 sm:py-32">
-          <Titulo className="text-[32px] sm:text-[44px] tracking-[-.03em]">Preguntas frecuentes</Titulo>
-          <div className="mt-6 divide-y divide-hundido">
+        <section className="contenedor py-20 sm:py-32 grid lg:grid-cols-[1fr_1.4fr] gap-8 lg:gap-16 items-start">
+          <Titulo className="text-[40px] sm:text-[60px] leading-[1.02] tracking-[-.04em]">Preguntas frecuentes</Titulo>
+          <div className="divide-y divide-hundido">
             {PREGUNTAS.map(([p, r]) => (
               <details key={p} className="group py-2">
                 <summary className="text-[18px] font-medium min-h-12 items-center list-none flex justify-between gap-4">
@@ -121,7 +124,7 @@ export default async function Inicio() {
 
         <Final destino={destino} />
       </main>
-      <div className="mx-auto max-w-[1280px] px-5 sm:px-8">
+      <div className="contenedor">
         <p className="pt-6 text-[14px] text-tinta-3">Citas traducidas de sus textos originales.</p>
         <Pie />
       </div>

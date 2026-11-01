@@ -1,15 +1,13 @@
 "use client";
 
 import { motion, useScroll, useSpring, useTransform } from "motion/react";
-import Link from "next/link";
 import { useRef } from "react";
-import { Logo } from "@/components/logo";
 import { HiloLienzo } from "@/components/movimiento/hilo-lienzo";
 import { CURVA } from "@/components/movimiento/piezas";
 import { Entrada } from "./entrada";
 
 /** La escena fija: bajar es desenredar. Al final queda la línea y el sol. */
-export function Heroe({ destino, conSesion }: { destino: string; conSesion: boolean }) {
+export function Heroe({ destino }: { destino: string }) {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
   const p = useSpring(scrollYProgress, { stiffness: 90, damping: 26, mass: .4 });
@@ -26,15 +24,7 @@ export function Heroe({ destino, conSesion }: { destino: string; conSesion: bool
         <div aria-hidden className="absolute inset-0 bg-[radial-gradient(70%_60%_at_18%_44%,#1b2bb0_0%,transparent_70%),radial-gradient(45%_40%_at_92%_46%,rgba(255,200,61,.14),transparent_70%)]" />
         <HiloLienzo progreso={p} centro={.455} />
 
-        <div className="relative z-10 mx-auto flex h-full max-w-[1280px] flex-col px-5 sm:px-8">
-          <header className="flex items-center justify-between py-3">
-            <Logo />
-            <nav className="flex items-center gap-1">
-              <a href="#precio" className="hidden sm:inline-flex items-center px-3 min-h-11 font-medium text-tinta-2 hover:text-tinta transition-colors">Precio</a>
-              <Link href={conSesion ? "/app" : "/ingresar"} className="inline-flex items-center px-4 min-h-11 font-medium rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-colors">{conSesion ? "Mis casos" : "Entrar"}</Link>
-            </nav>
-          </header>
-
+        <div className="contenedor relative z-10 flex h-full flex-col pt-[68px]">
           <motion.div style={{ opacity: opacidad1, y: y1, pointerEvents: eventos }} className="flex flex-1 flex-col">
             <h1 className="pt-5 sm:pt-7 font-semibold text-[56px] leading-[.98] sm:text-[clamp(60px,8.6vw,124px)] tracking-[-.04em]">
               {"Deja de darle vueltas.".split(" ").map((x, i) => (
@@ -46,7 +36,7 @@ export function Heroe({ destino, conSesion }: { destino: string; conSesion: bool
             <div className="mt-auto pb-7 sm:pb-10 grid lg:grid-cols-[1fr_1.02fr] gap-5 lg:gap-16 items-end">
               <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .8, ease: CURVA, delay: .55 }}
                 className="text-[18px] sm:text-[22px] leading-[1.35] text-tinta-2 max-w-[26em] [@media(max-height:760px)]:hidden">
-                Un método de diez etapas y un copiloto de IA que te llevan del nudo en la cabeza a un resultado que puedes medir.
+                Cuéntalo una vez. La IA hace el análisis, tú eliges lo que más te hace sentido y en minutos tienes un plan que te acompaña hasta resolverlo.
               </motion.p>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .8, ease: CURVA, delay: .7 }}>
                 <Entrada destino={destino} id="relato-inicio" />
@@ -55,9 +45,9 @@ export function Heroe({ destino, conSesion }: { destino: string; conSesion: bool
             </div>
           </motion.div>
 
-          <motion.div aria-hidden={false} style={{ opacity: opacidad2, y: y2 }} className="pointer-events-none absolute inset-x-5 sm:inset-x-8 top-[56%]">
+          <motion.div style={{ opacity: opacidad2, y: y2 }} className="contenedor pointer-events-none !absolute inset-x-0 top-[56%]">
             <p className="font-semibold text-[64px] sm:text-[clamp(84px,12vw,176px)] leading-none tracking-[-.045em]">Resuélvelo.</p>
-            <p className="mt-3 text-[18px] sm:text-[22px] text-tinta-2">Una línea recta, desde hoy hasta que deje de ser un problema.</p>
+            <p className="mt-3 text-[18px] sm:text-[22px] text-tinta-2">En cuatro decisiones, desde hoy hasta que deje de ser un problema.</p>
           </motion.div>
         </div>
 

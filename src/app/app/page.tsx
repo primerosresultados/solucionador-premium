@@ -9,7 +9,7 @@ import { Contador, Medidor } from "@/components/movimiento/piezas";
 import { exigirSesion } from "@/lib/auth";
 import { pasosDe, revisionesDe, saludDe } from "@/lib/casos";
 import { saldoCreditos } from "@/lib/compras";
-import { CATEGORIAS, ETAPAS, type Categoria } from "@/lib/metodo";
+import { CATEGORIAS, PASOS, type Categoria } from "@/lib/metodo";
 import { ETIQUETA_SALUD, type EstadoSalud } from "@/lib/salud";
 
 export const metadata: Metadata = { title: "Mis casos" };
@@ -44,7 +44,7 @@ export default async function Pagina() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pt-4">
       <header className="flex items-end justify-between gap-3">
         <div>
           <h1 className="text-[36px] leading-tight tracking-[-.03em]">Hola, {nombre}</h1>
@@ -79,7 +79,7 @@ export default async function Pagina() {
             <Link href={`/app/caso/${c.id}`} className="tarjeta !p-5 flex items-center gap-4 transition-transform duration-200 hover:-translate-y-0.5">
               <div className="flex-1 min-w-0">
                 <h2 className="font-sans tracking-normal font-semibold text-[17px] leading-snug">{c.titulo}</h2>
-                <p className="text-[14px] text-tinta-3 mt-1">{CATEGORIAS[c.categoria as Categoria]} · {estadoTexto(c.estado, c.etapa, !!c.desbloqueadoEn)}</p>
+                <p className="text-[14px] text-tinta-3 mt-1">{c.etapa > 1 || c.estado !== "metodo" ? `${CATEGORIAS[c.categoria as Categoria]}, ` : ""}{estadoTexto(c.estado, c.etapa, !!c.desbloqueadoEn)}</p>
                 {avance.has(c.id) && (
                   <div className="mt-2 h-1.5 rounded-full bg-hundido overflow-hidden" role="img" aria-label={`${avance.get(c.id)}% de los pasos hechos`}>
                     <div className="h-full rounded-full bg-acento" style={{ width: `${avance.get(c.id)}%` }} />
@@ -105,6 +105,5 @@ function estadoTexto(estado: string, etapa: number, desbloqueado: boolean) {
   if (estado === "verificacion") return "En verificación";
   if (estado === "pausado") return "En pausa";
   if (estado === "ejecucion") return "En ejecución";
-  if (!desbloqueado && etapa === 1) return "Etapa gratis";
-  return `Etapa ${etapa} de 10 · ${ETAPAS[etapa - 1].nombre}`;
+  return `Paso ${etapa} de 4, ${PASOS[Math.min(etapa, 4) - 1].nombre.toLowerCase()}${desbloqueado ? "" : " (gratis)"}`;
 }

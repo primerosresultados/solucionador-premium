@@ -34,11 +34,11 @@ function EscenaGratis() {
   return (
     <div className="w-full max-w-[290px]">
       <div className="flex gap-1">
-        {Array.from({ length: 10 }, (_, i) => (
-          <motion.span key={i} className={`h-2.5 flex-1 rounded-full ${i === 0 ? "bg-sol" : "bg-hundido"}`} initial={{ scaleX: 0 }} whileInView={{ scaleX: 1 }} viewport={vista} transition={{ delay: i * .05, duration: .4, ease: CURVA }} />
+        {Array.from({ length: 4 }, (_, i) => (
+          <motion.span key={i} className={`h-2.5 flex-1 rounded-full ${i < 2 ? "bg-sol" : "bg-hundido"}`} initial={{ scaleX: 0 }} whileInView={{ scaleX: 1 }} viewport={vista} transition={{ delay: i * .05, duration: .4, ease: CURVA }} />
         ))}
       </div>
-      <p className="mt-2 text-[14px] text-tinta-2">La etapa 1 corre por nuestra cuenta.</p>
+      <p className="mt-2 text-[14px] text-tinta-2">El diagnóstico corre por nuestra cuenta.</p>
     </div>
   );
 }
@@ -53,9 +53,9 @@ function EscenaBorrar() {
 }
 
 const ITEMS = [
-  { t: "Tú decides.", d: "La IA pregunta, cuestiona y propone. Nada entra a tu caso sin que lo aceptes.", E: EscenaDecides, c: "lg:col-span-7" },
+  { t: "Tú decides.", d: "La IA analiza y propone. Tú eliges lo que te hace sentido, y nada queda sin tu visto bueno.", E: EscenaDecides, c: "lg:col-span-7" },
   { t: "Lo tuyo es tuyo.", d: "Solo tú lees tu caso, y no se usa para entrenar modelos.", E: EscenaPrivado, c: "lg:col-span-5" },
-  { t: "Pruebas antes de pagar.", d: "Sin tarjeta. Pagas si quieres seguir, una sola vez, con Flow.", E: EscenaGratis, c: "lg:col-span-5" },
+  { t: "Pruebas antes de pagar.", d: "Ves tu diagnóstico sin tarjeta. Pagas si quieres seguir, una sola vez, con Flow.", E: EscenaGratis, c: "lg:col-span-5" },
   { t: "Sin promesas de milagro.", d: "No reemplaza a un médico, un abogado ni un terapeuta. Es un método para ordenar y actuar.", E: EscenaBorrar, c: "lg:col-span-7" },
 ];
 

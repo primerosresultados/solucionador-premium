@@ -2,23 +2,37 @@
 
 Síntesis propia. Las ideas de resolución de problemas no tienen dueño; los textos y el orden son nuestros. **No usar el nombre de Brian Tracy en la marca, el sitio ni la publicidad**: sugeriría un respaldo que no existe y su nombre es marca comercial. Tampoco copiar párrafos de sus libros.
 
+## Cómo se aplica
+
+La persona cuenta su problema una vez. La IA hace el análisis de las etapas y la persona elige en cuatro pasos. Escribir siempre es opcional.
+
+| Paso | La persona | La IA ya hizo |
+|---|---|---|
+| 1. Problema | Elige la lectura que le calza | Encuadre, urgencia, tipo y cuatro definiciones |
+| 2. Causa | Elige la causa | Cinco causas, hechos o suposiciones, por qué encadenados |
+| Pago | | Lo gratis termina aquí: ya vio su diagnóstico |
+| 3. Salida | Elige entre tres finalistas | Veinte ideas, evaluación y supuesto crítico |
+| 4. Plan | Revisa y da el número de hoy si no estaba | Meta, estrategia, pasos, riesgos, plan B y compromiso |
+
+Son tres llamadas a la IA: `diagnostico` (pasos 1 y 2), `salidas` y `ejecucion`.
+
 ## Qué se tomó de Brian Tracy
 
 | Principio | Fuente | Dónde vive |
 |---|---|---|
-| Actitud positiva: es manejable | 10 pasos (1), 8 pasos (1) | Etapa 1 |
-| Decir «situación», no «problema» | 8 pasos (2) | Etapa 1 |
-| Definir por escrito: «¿qué es exactamente?», «¿qué más?» | 8 pasos (3) | Etapa 2, mínimo 3 definiciones |
-| «¿Cómo ocurrió?», todas las causas | Libro, 8 pasos (4) | Etapa 3 |
-| Todas las soluciones, incluida no hacer nada | Libro | Etapa 4 parte con esa idea cargada |
-| Mindstorming: 20 respuestas a una pregunta | Creativity & Problem Solving | Etapa 4, mínimo 20 |
-| Pensamiento base cero (KWINK) | Libro, cap. 15 | Pregunta obligatoria en etapa 4 |
-| Pros, contras, costos; decidir | 10 pasos (5), 8 pasos (6) | Etapa 5 |
-| Esperar lo mejor, prepararse para lo peor | 10 pasos (6), Crunch Point | Etapa 6 |
-| Plazo y medida de éxito | 10 pasos (7) | Etapa 7 |
-| Método ABCDE | Eat That Frog | Prioridad de pasos en etapa 8 |
-| Responsable y fecha de revisión | 10 pasos (8), 8 pasos (7) | Etapa 9 |
-| Comparar real contra esperado, ajustar | 10 pasos (10), 8 pasos (8) | Etapa 10 |
+| Actitud positiva: es manejable | 10 pasos (1), 8 pasos (1) | Encuadre del diagnóstico |
+| Decir «situación», no «problema» | 8 pasos (2) | Encuadre del diagnóstico |
+| Definir por escrito: «¿qué es exactamente?», «¿qué más?» | 8 pasos (3) | Cuatro definiciones en el paso 1 |
+| «¿Cómo ocurrió?», todas las causas | Libro, 8 pasos (4) | Paso 2 |
+| Todas las soluciones, incluida no hacer nada | Libro | La lista de salidas la incluye |
+| Mindstorming: 20 respuestas a una pregunta | Creativity & Problem Solving | Tarea `salidas`, 20 ideas |
+| Pensamiento base cero (KWINK) | Libro, cap. 15 | Instrucción de la tarea `salidas` |
+| Pros, contras, costos; decidir | 10 pasos (5), 8 pasos (6) | Finalistas con puntaje y contra |
+| Esperar lo mejor, prepararse para lo peor | 10 pasos (6), Crunch Point | Plan B y riesgos del paso 4 |
+| Plazo y medida de éxito | 10 pasos (7) | Meta del paso 4 |
+| Método ABCDE | Eat That Frog | Prioridad de los pasos |
+| Responsable y fecha de revisión | 10 pasos (8), 8 pasos (7) | Compromiso del paso 4 |
+| Comparar real contra esperado, ajustar | 10 pasos (10), 8 pasos (8) | Seguimiento |
 
 ## Qué le agregamos
 
@@ -27,7 +41,7 @@ Síntesis propia. Las ideas de resolución de problemas no tienen dueño; los te
 - Premortem: imaginar que ya falló.
 - Indicador con línea base: se mide el resultado, no el esfuerzo.
 - Salud del caso, contra el calendario original: reprogramar no mejora la nota.
-- Regla del copiloto: en ideas solo entra tras 5 propias, y nada entra solo al trabajo de la persona.
+- La IA propone y la persona elige: lo recomendado viene marcado, y siempre puede escribir lo suyo o pedir otra propuesta.
 - Compañero de compromiso.
 - Verificación a 30 días: resuelto significa que no volvió.
 

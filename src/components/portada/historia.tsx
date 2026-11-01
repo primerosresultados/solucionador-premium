@@ -6,12 +6,12 @@ import { useRef, useState } from "react";
 import { Contador, CURVA, Medidor, Tecleo } from "@/components/movimiento/piezas";
 
 const BEATS = [
-  { etapa: "Etapas 1 y 2", titulo: "Lo sacas de la cabeza.", texto: "Lo cuentas como te salga. El copiloto lo convierte en algo que se puede trabajar.", P: Encuadre },
-  { etapa: "Etapa 3", titulo: "Llegas a la causa real.", texto: "Separas hechos de suposiciones y sigues preguntando por qué hasta encontrarla.", P: Causas },
-  { etapa: "Etapa 4", titulo: "Ves salidas que no veías.", texto: "Veinte ideas sin juzgarlas. Las mejores suelen llegar después de la décima.", P: Ideas },
-  { etapa: "Etapas 5 y 6", titulo: "Decides con la cabeza fría.", texto: "Comparas con criterios claros, la IA pone a prueba tu decisión y dejas listo el plan B.", P: Decision },
-  { etapa: "Etapas 7 a 9", titulo: "Lo conviertes en pasos.", texto: "Una meta con número y fecha, y pasos claros. El primero parte en 48 horas.", P: Plan },
-  { etapa: "Etapa 10", titulo: "Y no te suelta.", texto: "Te dice qué sigue, mide el resultado y te busca si desapareces. Hasta verificar que no volvió.", P: Seguimiento },
+  { etapa: "Paso 1", titulo: "Lo cuentas una vez.", texto: "Con tus palabras, sin ordenarlo. El copiloto lo lee y encuentra el problema de fondo.", P: Encuadre },
+  { etapa: "Paso 2", titulo: "Eliges dónde está la causa.", texto: "Te muestra las causas más probables y cómo comprobarlas. Tú marcas la que te suena.", P: Causas },
+  { etapa: "Paso 3", titulo: "Analiza veinte salidas por ti.", texto: "Genera ideas que no habías visto, sin juzgarlas, y después las evalúa con rigor.", P: Ideas },
+  { etapa: "Paso 3", titulo: "Te quedas con la mejor.", texto: "Las compara, te muestra lo malo de cada una y busca el supuesto que podría tumbarla.", P: Decision },
+  { etapa: "Paso 4", titulo: "Tu plan está listo.", texto: "Meta con número y fecha, pasos con prioridad y plan B. Solo lo revisas y partes.", P: Plan },
+  { etapa: "Seguimiento", titulo: "Y no te suelta.", texto: "Te dice qué sigue, mide el resultado y te busca si desapareces. Hasta verificar que no volvió.", P: Seguimiento },
 ];
 
 /** El producto contándose solo: el teléfono queda fijo y las pantallas cambian al bajar. */
@@ -22,10 +22,10 @@ export function Historia() {
   useMotionValueEvent(scrollYProgress, "change", (v) => setI(Math.min(BEATS.length - 1, Math.floor(v * BEATS.length))));
   const b = BEATS[i];
   return (
-    <section ref={ref} className="escena-noche relative" style={{ height: `${BEATS.length * 90}svh` }} aria-label="Cómo funciona">
+    <section ref={ref} id="como" className="escena-noche relative" style={{ height: `${BEATS.length * 90}svh` }} aria-label="Cómo funciona">
       <div className="grano sticky top-0 h-svh overflow-hidden">
         <div aria-hidden className="absolute inset-0 bg-[radial-gradient(50%_55%_at_72%_50%,#17248f,transparent_70%)]" />
-        <div className="relative z-10 mx-auto h-full max-w-[1280px] px-5 sm:px-8 grid lg:grid-cols-[1fr_auto] gap-x-20 items-center content-center gap-y-5">
+        <div className="contenedor relative z-10 h-full grid lg:grid-cols-[1fr_auto] gap-x-20 items-center content-center gap-y-5">
           <div className="order-2 lg:order-1">
             <div className="hidden lg:flex gap-1.5 mb-8" aria-hidden>
               {BEATS.map((x, n) => (

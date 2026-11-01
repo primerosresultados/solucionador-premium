@@ -19,7 +19,7 @@ export function Citas() {
     <>
       <section ref={ref} className="relative hidden lg:block h-[300svh]" aria-label="Lo que ya sabían">
         <div className="sticky top-0 h-svh overflow-hidden flex items-center">
-          <motion.div style={{ x }} className="flex gap-6 pl-[max(32px,calc((100vw-1216px)/2))] w-max">
+          <motion.div style={{ x }} className="flex gap-6 pl-[max(32px,calc((100vw-1200px)/2))] w-max">
             {CITAS.map((c, i) => <Tarjeta key={c.a} c={c} i={i} />)}
           </motion.div>
         </div>

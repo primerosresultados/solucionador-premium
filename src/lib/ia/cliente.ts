@@ -9,6 +9,7 @@ import { SISTEMA, TAREAS, type Resultado, type TareaId } from "./tareas";
 const modelo = () => process.env.ANTHROPIC_MODEL ?? "claude-opus-5-5";
 
 export const LIMITE_GRATIS_POR_CASO = 3;
+export const LIMITE_CASOS_GRATIS_POR_DIA = 5;
 export const LIMITE_POR_CASO = 80;
 export const LIMITE_POR_HORA = 30;
 

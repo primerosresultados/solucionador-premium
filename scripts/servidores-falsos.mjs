@@ -11,22 +11,49 @@ let ultimoClaude = null;
 let modoClaude = "normal";
 let n = 0;
 
-const ideas = (k) => Array.from({ length: k }, (_, i) => ({ texto: `Idea del copiloto ${i + 1}`, angulo: "Invertir el problema" }));
+const nombresIdeas = ["Fijarme un sueldo y separar las cuentas", "Subir precios en lo que deja menos", "Contratar un contador", "Eliminar los descuentos", "Cobrar por adelantado", "Vender a empresas", "Reducir la carta", "Reservar 10% de cada venta", "Renegociar con proveedores", "Cerrar los días flojos", "Delegar la caja", "Crear paquetes", "Pedir ayuda a un mentor", "Buscar un socio", "Vender por internet", "Bajar el arriendo", "Medir el margen semanal", "Dejar el producto menos rentable", "Hacer preventa", "No hacer nada"];
 const RESPUESTAS = {
-  encuadrar: { situacion_neutra: "Mi negocio vende, pero a fin de mes no queda dinero disponible.", lecturas: ["Es un problema de márgenes", "Es un problema de orden de caja", "Es un problema de precios"], preguntas: ["¿Sabes cuánto ganas por venta?", "¿Mezclas cuentas personales y del negocio?"], alerta_cuidado: false },
-  definir: { critica: "Tu definición describe un síntoma. Falta decir qué parte depende de ti.", definiciones: ["¿Cómo puedo saber el margen real de cada venta?", "¿Cómo separo la caja del negocio de la mía?", "¿Cómo subo el precio sin perder clientes?", "¿Cómo bajo los gastos fijos?"], como_se_veria: "Cada mes retiro un sueldo fijo y queda un excedente.", alerta_cuidado: false },
-  causas: { causas: [{ texto: "Los precios no se actualizan hace dos años", tipo: "suposicion", como_verificar: "Compara tu lista con la de hace dos años" }, { texto: "Hay retiros personales sin registro", tipo: "hecho", como_verificar: "Revisa la cartola del último mes" }, { texto: "Los descuentos no se controlan", tipo: "suposicion", como_verificar: "Suma los descuentos de un mes" }, { texto: "Los costos subieron sin notarlo", tipo: "suposicion", como_verificar: "Compara tres facturas" }], pregunta_clave: "¿Cuánto retiras tú antes de saber si hubo ganancia?", alerta_cuidado: false },
-  ideas: { ideas: ideas(12), alerta_cuidado: false },
-  desafiar: { debilidades: ["Podría bajar la demanda", "Requiere disciplina mensual", "No resuelve los costos"], supuesto_critico: "Tus clientes aceptarán un alza del 8%.", como_probarlo: "Prueba el alza con 10 clientes esta semana.", mejora: "Agrega un paquete de mayor valor.", alerta_cuidado: false },
-  premortem: { riesgos: [{ texto: "Se pierden clientes por el alza", senal: "Caen las ventas 15% en dos semanas", respuesta: "Ofrecer paquete de menor precio" }, { texto: "Vuelvo a mezclar cuentas", senal: "Un retiro sin registrar", respuesta: "Bloquear la tarjeta del negocio" }, { texto: "Falta caja en temporada baja", senal: "Saldo bajo el mínimo", respuesta: "Reservar 10% de cada venta" }], plan_b: "Reducir la carta a los 5 productos con mejor margen.", disparador: "Si al 30 de diciembre el margen sigue bajo 12%.", alerta_cuidado: false },
-  meta: { indicador: "Margen mensual del negocio", unidad: "%", como_medir: "Ganancia dividida por ventas del mes", plazo_dias: 90, razon: "Mide el resultado y no el esfuerzo.", alerta_cuidado: false },
-  plan: { pasos: [
-    { titulo: "Separar la cuenta del negocio de la personal", criterio_hecho: "Cuenta nueva abierta y retiros solo por sueldo", prioridad: "A", dias_desde_hoy: 3, depende_del_paso: null },
-    { titulo: "Calcular el costo real de los 10 productos principales", criterio_hecho: "Planilla con costo por producto", prioridad: "A", dias_desde_hoy: 10, depende_del_paso: null },
-    { titulo: "Subir precios en los productos bajo el margen mínimo", criterio_hecho: "Lista de precios publicada", prioridad: "A", dias_desde_hoy: 20, depende_del_paso: 2 },
-    { titulo: "Eliminar los descuentos no autorizados", criterio_hecho: "Regla escrita y comunicada", prioridad: "B", dias_desde_hoy: 25, depende_del_paso: null },
-    { titulo: "Renegociar con los dos proveedores principales", criterio_hecho: "Nuevas condiciones por escrito", prioridad: "B", dias_desde_hoy: 40, depende_del_paso: null },
-  ], primer_movimiento: "Pide hora en el banco para abrir la cuenta del negocio.", alerta_cuidado: false },
+  diagnostico: {
+    titulo: "Mi negocio vende, pero no deja plata", categoria: "trabajo", urgencia: "alta",
+    situacion: "Mi negocio vende, pero a fin de mes no queda dinero disponible.", importancia: "Puedo perder el negocio y la tranquilidad en mi casa.",
+    definiciones: [
+      { texto: "No sé cuánto me deja cada venta", por_que: "Dices que no entiendes dónde se va la plata." },
+      { texto: "Mezclo la plata del negocio con la mía", por_que: "A fin de mes no hay un sueldo claro." },
+      { texto: "Mis precios quedaron atrás de mis costos", por_que: "Vendes harto y aun así no queda." },
+      { texto: "Trabajo mucho sin ver el resultado", por_que: "Lo que más pesa es no ver frutos." },
+    ],
+    causas: [
+      { texto: "Retiro plata sin registrar", tipo: "suposicion", como_verificar: "Revisa la cartola del último mes.", por_que: ["Nunca definí un sueldo", "No sé cuánto deja el negocio"] },
+      { texto: "Mis precios no se actualizan hace dos años", tipo: "suposicion", como_verificar: "Compara tu lista con la de hace dos años.", por_que: ["No sé cuánto me cuesta cada producto"] },
+      { texto: "Los descuentos no se controlan", tipo: "suposicion", como_verificar: "Suma los descuentos de un mes.", por_que: ["Cada vendedor decide"] },
+      { texto: "Los costos subieron sin notarlo", tipo: "suposicion", como_verificar: "Compara tres facturas.", por_que: ["No reviso a proveedores"] },
+      { texto: "Vendo harto a pérdida", tipo: "hecho", como_verificar: "Costea tu producto más vendido.", por_que: ["Nunca lo calculé"] },
+    ],
+    aclaracion: null, alerta_cuidado: false,
+  },
+  salidas: {
+    ideas: nombresIdeas.map((texto) => ({ texto, angulo: "Ordenar" })),
+    finalistas: [
+      { idea: 1, impacto: 5, viable: 5, rapido: 4, riesgo: 4, por_que: "Ataca directo la causa y parte esta semana.", contra: "Exige disciplina mensual." },
+      { idea: 2, impacto: 4, viable: 4, rapido: 4, riesgo: 3, por_que: "Mejora el margen sin vender más.", contra: "Podría bajar la demanda." },
+      { idea: 3, impacto: 3, viable: 3, rapido: 2, riesgo: 5, por_que: "Te da números claros.", contra: "Agrega un costo fijo." },
+    ],
+    supuesto_critico: "Tus clientes aceptarán un alza del 8%.", como_probarlo: "Prueba el alza con 10 clientes esta semana.", alerta_cuidado: false,
+  },
+  ejecucion: {
+    indicador: "Margen mensual del negocio", unidad: "%", hoy: null, objetivo: 18, plazo_dias: 90,
+    estrategia: "Primero ordenar la caja, después subir precios. Dejamos de dar descuentos sin control.",
+    pasos: [
+      { titulo: "Separar la cuenta del negocio de la personal", criterio_hecho: "Cuenta nueva abierta y retiros solo por sueldo", prioridad: "A", dias_desde_hoy: 3, depende_del_paso: null },
+      { titulo: "Calcular el costo real de los 10 productos principales", criterio_hecho: "Planilla con costo por producto", prioridad: "A", dias_desde_hoy: 10, depende_del_paso: null },
+      { titulo: "Subir precios en los productos bajo el margen mínimo", criterio_hecho: "Lista de precios publicada", prioridad: "A", dias_desde_hoy: 20, depende_del_paso: 2 },
+      { titulo: "Eliminar los descuentos no autorizados", criterio_hecho: "Regla escrita y comunicada", prioridad: "B", dias_desde_hoy: 25, depende_del_paso: null },
+      { titulo: "Renegociar con los dos proveedores principales", criterio_hecho: "Nuevas condiciones por escrito", prioridad: "B", dias_desde_hoy: 40, depende_del_paso: null },
+    ],
+    riesgos: [{ texto: "Se pierden clientes por el alza", senal: "Caen las ventas 15% en dos semanas", respuesta: "Ofrecer un paquete de menor precio" }, { texto: "Vuelvo a mezclar cuentas", senal: "Un retiro sin registrar", respuesta: "Bloquear la tarjeta del negocio" }, { texto: "Falta caja en temporada baja", senal: "Saldo bajo el mínimo", respuesta: "Reservar 10% de cada venta" }],
+    plan_b: "Reducir la carta a los 5 productos con mejor margen.", disparador: "Si al 30 de diciembre el margen sigue bajo 12%.",
+    compromiso: "Me hago cargo de que el negocio deje margen y de revisar los números cada semana.", alerta_cuidado: false,
+  },
   revision: { lectura: "El margen subió tres puntos: el cambio de precios está funcionando.", patron: "Postergas lo que implica hablar con proveedores.", ajuste: "Agenda la reunión con proveedores esta misma semana.", proximo_paso: "Llama al proveedor principal hoy.", pasos_sugeridos: [{ titulo: "Agendar reunión con el proveedor principal", criterio_hecho: "Reunión con fecha confirmada", prioridad: "A", dias_desde_hoy: 4 }], evaluar_plan_b: false, alerta_cuidado: false },
   destrabar: { diagnostico: "Falta un dato, no voluntad.", opciones: ["Pedir el dato al contador", "Estimarlo con tres facturas", "Delegarlo"], paso_minimo: "Mandar un mensaje al contador.", alerta_cuidado: false },
   cierre: { resumen: "Pasaste de vender sin margen a retirar un sueldo fijo.", funciono: ["Separar las cuentas"], no_funciono: ["Postergar a proveedores"], regla: "Primero el margen, después el descuento.", senales_recaida: ["Un retiro sin registrar"], alerta_cuidado: false },

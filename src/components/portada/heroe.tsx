@@ -33,14 +33,14 @@ export function Heroe({ destino }: { destino: string }) {
                 </span>
               ))}
             </h1>
-            <div className="mt-auto pb-7 sm:pb-10 grid lg:grid-cols-[1fr_1.02fr] gap-5 lg:gap-16 items-end">
+            <div className="mt-auto pb-7 sm:pb-10 grid lg:grid-cols-[1fr_1.15fr] gap-5 lg:gap-14 items-end">
               <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .8, ease: CURVA, delay: .55 }}
                 className="text-[18px] sm:text-[22px] leading-[1.35] text-tinta-2 max-w-[26em] [@media(max-height:760px)]:hidden">
                 Cuéntalo una vez. La IA hace el análisis, tú eliges lo que más te hace sentido y en minutos tienes un plan que te acompaña hasta resolverlo.
               </motion.p>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .8, ease: CURVA, delay: .7 }}>
-                <Entrada destino={destino} id="relato-inicio" />
-                <p className="mt-3 text-[14px] text-tinta-3">Gratis para empezar, sin tarjeta. Solo tú lo lees.</p>
+                <Entrada destino={destino} />
+                <p className="mt-3 text-[15px] text-tinta-2">Escríbelo o dilo en voz alta. Gratis, sin tarjeta y solo tú lo lees.</p>
               </motion.div>
             </div>
           </motion.div>

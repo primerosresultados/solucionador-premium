@@ -12,7 +12,7 @@ import { CURVA } from "@/components/movimiento/piezas";
 import { hoyChile, sumarDias } from "@/lib/fechas";
 import type { Resultado } from "@/lib/ia/tareas";
 import { PASOS, puntajeSalida, URGENCIAS, type Trabajo, type Urgencia } from "@/lib/metodo";
-import { Alerta, ApoyoCuidado } from "./piezas";
+import { Alerta, ApoyoCuidado, Dictar } from "./piezas";
 
 type Propuesta = "diagnostico" | "salidas" | "ejecucion";
 
@@ -141,6 +141,7 @@ function Marco({ paso, m, tarea, estado, atras, accion, nota, ajustable = true, 
                 <div className="tarjeta !p-4 space-y-3">
                   <label className="block"><span className="font-medium">¿Qué me faltó?</span>
                     <textarea autoFocus rows={2} className="campo mt-2" value={ajuste} onChange={(e) => setAjuste(e.target.value)} placeholder="Cuéntame lo que no consideré y vuelvo a proponer" /></label>
+                  <Dictar alTexto={(t) => setAjuste((a) => `${a} ${t}`.trim())} />
                   <div className="flex gap-2"><button className="btn btn-1 btn-chico" disabled={ajuste.trim().length < 3} onClick={pedirAjuste}>Volver a proponer</button><button className="btn btn-3 btn-chico" onClick={() => setAbierto(false)}>Cancelar</button></div>
                 </div>
               ) : <button className="btn btn-3 btn-chico !px-1" onClick={() => setAbierto(true)}><Sparkles size={16} /> Ninguna me calza</button>)}
@@ -179,7 +180,7 @@ function OpcionPropia({ activa, alElegir, valor, alCambiar, texto }: { activa: b
   return (
     <div className={`rounded-[20px] transition-shadow duration-200 ${activa ? "bg-superficie shadow-[0_0_0_2px_var(--color-acento)]" : "ring-1 ring-inset ring-tinta-3/25"}`}>
       <button type="button" role="radio" aria-checked={activa} onClick={alElegir} className="w-full text-left flex items-center gap-3 p-4 sm:px-5 min-h-14 font-medium text-tinta-2"><Pencil size={17} aria-hidden /> {texto}</button>
-      {activa && <div className="px-4 sm:px-5 pb-4"><textarea autoFocus rows={2} aria-label={texto} className="campo" value={valor} onChange={(e) => alCambiar(e.target.value)} /></div>}
+      {activa && <div className="px-4 sm:px-5 pb-4 space-y-2"><textarea autoFocus rows={2} aria-label={texto} className="campo" value={valor} onChange={(e) => alCambiar(e.target.value)} /><Dictar alTexto={(t) => alCambiar(`${valor} ${t}`.trim())} /></div>}
     </div>
   );
 }

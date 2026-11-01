@@ -57,7 +57,21 @@ await p.goto(APP); await p.waitForTimeout(3000); await p.screenshot({ path: "qa/
 await p.getByRole("tab", { name: "Las deudas me ahogan" }).click();
 await p.getByText("Anotar cada deuda con su saldo y su tasa.").waitFor();
 await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(900);
-await p.getByLabel("Escribe lo que te tiene dando vueltas").first().fill("Mi negocio vende harto pero a fin de mes no queda plata y no entiendo dónde se va.");
+await p.addInitScript(() => {
+  window.SpeechRecognition = window.webkitSpeechRecognition = class {
+    start() { setTimeout(() => this.onresult({ resultIndex: 0, results: [Object.assign([{ transcript: "Hola" }], { isFinal: false })] }), 50);
+      setTimeout(() => this.onresult({ resultIndex: 0, results: [Object.assign([{ transcript: "Mi negocio vende harto" }], { isFinal: true })] }), 150);
+      setTimeout(() => this.onresult({ resultIndex: 1, results: [{}, Object.assign([{ transcript: "pero a fin de mes no queda plata y no entiendo dónde se va." }], { isFinal: true })] }), 250); }
+    stop() { this.onend(); }
+  };
+});
+await p.goto(APP); await p.waitForTimeout(600);
+await p.getByRole("button", { name: "Hablar", exact: true }).first().click();
+await p.waitForFunction(() => document.querySelector("textarea").value.includes("no queda plata"));
+await p.getByRole("button", { name: "Terminar de dictar" }).first().click();
+const dictado = await p.getByLabel("Escribe lo que te tiene dando vueltas").first().inputValue();
+assert.equal(dictado, "Mi negocio vende harto pero a fin de mes no queda plata y no entiendo dónde se va.");
+ok("la voz entra con un toque y no duplica frases");
 await p.getByRole("button", { name: "Empezar a resolverlo" }).first().click();
 await p.waitForURL("**/registro");
 await p.getByLabel("Tu nombre").fill("Ana Pérez");

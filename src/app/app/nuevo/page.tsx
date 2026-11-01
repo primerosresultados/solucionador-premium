@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowRight, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { Alerta, Dictar } from "@/components/caso/piezas";
+import { Alerta } from "@/components/caso/piezas";
+import { CajaRelato } from "@/components/dictado";
 import { RELATO_PORTADA } from "@/components/portada/entrada";
 import { crearCaso } from "../acciones";
 
@@ -14,7 +15,6 @@ export default function Pagina() {
   const [relato, setRelato] = useState("");
   const [error, setError] = useState("");
   const [pendiente, iniciar] = useTransition();
-  const alDictar = useCallback((t: string) => setRelato((r) => `${r} ${t}`.trim()), []);
   const enviado = useRef(false);
 
   const enviar = useCallback((texto: string) => iniciar(async () => {
@@ -38,18 +38,16 @@ export default function Pagina() {
   return (
     <div className="mx-auto max-w-[760px] pt-6 sm:pt-12">
       <h1 className="text-[34px] sm:text-[52px] leading-[1.04] tracking-[-.035em]">¿Qué te tiene dando vueltas?</h1>
-      <p className="mt-3 text-[18px] text-tinta-2">Cuéntalo como te salga. Yo hago el análisis y tú solo eliges.</p>
-      <section className="tarjeta mt-6 space-y-3">
-        <textarea autoFocus className="campo" rows={6} aria-label="Tu relato" value={relato} onChange={(e) => setRelato(e.target.value)}
-          placeholder="Ej: mi negocio vende bien, pero a fin de mes no me queda plata y ya no sé dónde se va…" />
-        {error && <Alerta tipo="ojo">{error}</Alerta>}
-        <div className="flex flex-wrap items-center gap-2 justify-between">
-          <Dictar alTexto={alDictar} />
-          <button className="btn btn-1 flex-1 sm:flex-none sm:ml-auto" disabled={pendiente} onClick={() => enviar(relato)}>
-            {pendiente ? "Abriendo tu caso…" : <><Sparkles size={18} /> Analizar mi caso <ArrowRight size={18} /></>}
+      <p className="mt-3 text-[18px] text-tinta-2">Escríbelo o dilo en voz alta, como te salga. Yo hago el análisis y tú solo eliges.</p>
+      <div className="mt-6">
+        <CajaRelato valor={relato} alCambiar={setRelato} etiqueta="Tu relato" filas={5} autoFoco placeholder="Ej: mi negocio vende bien, pero a fin de mes no me queda plata y ya no sé dónde se va…"
+          sombra="shadow-[0_0_0_1px_rgba(21,23,28,.05),0_30px_70px_-30px_rgba(28,50,201,.5)]">
+          <button className="btn btn-1 flex-1 min-w-0 !min-h-14 !px-3" disabled={pendiente} onClick={() => enviar(relato)}>
+            {pendiente ? "Abriendo tu caso…" : <><Sparkles size={18} className="hidden sm:block" /> Analizar mi caso</>}
           </button>
-        </div>
-      </section>
+        </CajaRelato>
+        {error && <div className="mt-3"><Alerta tipo="ojo">{error}</Alerta></div>}
+      </div>
       <div className="mt-5">
         <p className="text-[14px] font-medium text-tinta-3">¿No sabes cómo partir?</p>
         <div className="mt-2 flex flex-wrap gap-2">

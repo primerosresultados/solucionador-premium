@@ -1,9 +1,10 @@
 "use client";
 
-import { Check, Mic, MicOff, Plus, Sparkles, X } from "lucide-react";
+import { Check, Plus, Sparkles, X } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { pedirCopiloto } from "@/app/app/acciones";
+import { BotonVoz, usarDictado } from "@/components/dictado";
 import type { Resultado, TareaId } from "@/lib/ia/tareas";
 
 export function Campo({ etiqueta, ayuda, children }: { etiqueta: string; ayuda?: string; children: ReactNode }) {
@@ -16,40 +17,14 @@ export function Campo({ etiqueta, ayuda, children }: { etiqueta: string; ayuda?:
   );
 }
 
-type Reconocimiento = {
-  lang: string; continuous: boolean; interimResults: boolean; start(): void; stop(): void;
-  onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>>; resultIndex: number }) => void) | null;
-  onend: (() => void) | null;
-};
-
-/** Dictado por voz del navegador. Si el navegador no lo soporta, no aparece. */
 export function Dictar({ alTexto }: { alTexto: (t: string) => void }) {
-  const [disponible, setDisponible] = useState(false);
-  const [activo, setActivo] = useState(false);
-  const rec = useRef<Reconocimiento | null>(null);
-  const alTextoActual = useRef(alTexto);
-  useEffect(() => { alTextoActual.current = alTexto; });
-
-  useEffect(() => {
-    const w = window as unknown as { SpeechRecognition?: new () => Reconocimiento; webkitSpeechRecognition?: new () => Reconocimiento };
-    const R = w.SpeechRecognition ?? w.webkitSpeechRecognition;
-    if (!R) return;
-    const r = new R();
-    r.lang = "es-CL"; r.continuous = true; r.interimResults = false;
-    r.onresult = (e) => alTextoActual.current(e.results[e.resultIndex][0].transcript);
-    r.onend = () => setActivo(false);
-    rec.current = r;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDisponible(true);
-    return () => r.stop();
-  }, []);
-
-  if (!disponible) return null;
+  const { activo, parcial, error, alternar } = usarDictado(alTexto);
   return (
-    <button type="button" className="btn btn-2 btn-chico" aria-pressed={activo}
-      onClick={() => { if (activo) rec.current?.stop(); else { rec.current?.start(); setActivo(true); } }}>
-      {activo ? <MicOff size={18} /> : <Mic size={18} />} {activo ? "Detener" : "Dictar"}
-    </button>
+    <div className="flex flex-wrap items-center gap-2">
+      <BotonVoz activo={activo} alternar={alternar} className="h-11 min-w-[44px] px-4 text-[15px]" />
+      {activo && parcial && <span className="text-[15px] text-tinta-2">{parcial}</span>}
+      {error && <span role="alert" className="text-[14px] text-mal">{error}</span>}
+    </div>
   );
 }
 

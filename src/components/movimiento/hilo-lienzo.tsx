@@ -40,7 +40,7 @@ export function HiloLienzo({ progreso, centro = .5, compacto = false }: {
       const hebras = Math.max(5, Math.round((compacto ? 12 : angosto ? 16 : 30) * calidad));
       const tramos = Math.max(160, Math.round((compacto ? 340 : angosto ? 460 : 800) * calidad));
       const vueltas = angosto || compacto ? 9 : 15;
-      const R = Math.min(H * (compacto ? .3 : .19), angosto ? 96 : 150);
+      const R = Math.min(H * (compacto ? .3 : .19), compacto ? 96 : angosto ? 74 : 150);
       const cy = H * centro;
       const fin = mezclar(.9, .05, suave(limitar(p * 1.25)));
       const finX = W * (angosto ? .9 : .94);

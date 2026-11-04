@@ -33,12 +33,12 @@ export function Planes({ casoId, creditos }: { casoId: string | null; creditos: 
       ) : (
         <div className="grid sm:grid-cols-2 gap-4">
           {Object.values(PLANES).map((p) => (
-            <section key={p.id} className="tarjeta flex flex-col">
-              <h2 className="text-[20px] font-semibold">{p.nombre}</h2>
+            <section key={p.id} className="escena-noche borde-luz !bg-transparent flex flex-col p-7">
+              <h2 className="text-[21px]">{p.nombre}</h2>
               <p className="mt-1 text-tinta-2">{p.detalle}</p>
-              <p className="mt-4 font-titulo font-semibold text-[38px] leading-none tabular-nums">{pesos(p.monto)}</p>
-              <p className="mt-1 text-[14px] text-tinta-3">IVA incluido</p>
-              <button className={`btn mt-5 ${p.id === "uno" ? "btn-1" : "btn-2"}`} disabled={pendiente} onClick={() => pagar(p.id)}>{pendiente ? "Un momento…" : "Pagar con Flow"}</button>
+              <p className="mt-5 font-semibold text-[46px] leading-none tracking-[-.04em] tabular-nums">{pesos(p.monto)}</p>
+              <p className="mt-1.5 text-[14px] text-tinta-3">IVA incluido</p>
+              <button className="btn mt-6 bg-sol text-sol-tinta hover:-translate-y-px" disabled={pendiente} onClick={() => pagar(p.id)}>{pendiente ? "Un momento…" : "Pagar con Flow"}</button>
             </section>
           ))}
         </div>

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { avanceIndicador, avisosDelDia, calcularSalud, resumenSemanal, siguientePaso, type CasoSalud, type PasoSalud } from "./salud";
-import { faltantes, puntajeOpcion, trabajoInicial } from "./metodo";
+import { causaRaiz, puntajeSalida, salidaElegida, trabajoInicial } from "./metodo";
 
 const caso = (c: Partial<CasoSalud> = {}): CasoSalud => ({
   lineaBase: 100, objetivo: 0, fechaInicio: "2026-10-01", fechaObjetivo: "2026-11-30", proximaRevision: "2026-11-05",
@@ -103,24 +103,18 @@ test("el resumen semanal parte por lo que necesita atención", () => {
   assert.equal(resumenSemanal([{ titulo: "Bien", accion: "seguir", estado: "en_ruta" }]).asunto, "Tu semana: vas en ruta");
 });
 
-test("la etapa 4 exige veinte ideas y la pregunta de empezar de cero", () => {
-  const t = trabajoInicial();
-  assert.ok(faltantes(4, t).some((f) => f.campo === "ideas"));
-  t.ideas = Array.from({ length: 20 }, (_, i) => ({ id: `${i}`, texto: "x", origen: "persona" as const }));
-  t.empezarDeCero = "No lo haría de nuevo";
-  assert.deepEqual(faltantes(4, t), []);
+test("el puntaje de una salida pondera y normaliza", () => {
+  assert.equal(puntajeSalida({ impacto: 5, viable: 5, rapido: 5, riesgo: 5 }), 100);
+  assert.equal(puntajeSalida({ impacto: 5, viable: 1, rapido: 1, riesgo: 1 }), 47);
+  assert.equal(puntajeSalida({ impacto: 9, viable: 5, rapido: 5, riesgo: 5 }), 100);
 });
 
-test("elegir no hacer nada exige explicarlo", () => {
+test("la causa raíz y la salida elegidas se encuentran en el trabajo", () => {
   const t = trabajoInicial();
-  t.opciones = ["a", "b", "c"].map((ideaId) => ({ ideaId, notas: {}, favor: "", contra: "" }));
-  t.decisionIdeaId = "no-hacer-nada";
-  t.razonDecision = "porque sí, nada";
-  assert.ok(faltantes(5, t).some((f) => f.mensaje.includes("No hacer nada")));
-});
-
-test("el puntaje de una opción pondera los criterios", () => {
-  const criterios = [{ id: "a", nombre: "a", peso: 5 }, { id: "b", nombre: "b", peso: 1 }];
-  assert.equal(puntajeOpcion({ ideaId: "i", notas: { a: 5, b: 1 }, favor: "", contra: "" }, criterios), 87);
-  assert.equal(puntajeOpcion({ ideaId: "i", notas: {}, favor: "", contra: "" }, []), 0);
+  assert.equal(causaRaiz(t), null);
+  t.causas = [{ id: "a", texto: "x", evidencia: "hecho", porQue: [], esRaiz: true }];
+  assert.equal(causaRaiz(t)?.id, "a");
+  t.ideas = [{ id: "i", texto: "y", origen: "copiloto" }];
+  t.decisionIdeaId = "i";
+  assert.equal(salidaElegida(t)?.texto, "y");
 });

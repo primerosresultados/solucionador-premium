@@ -10,101 +10,79 @@ const alerta = {
 };
 
 export const TAREAS = {
-  encuadrar: {
-    esfuerzo: "medium",
-    esquema: z.object({
-      situacion_neutra: z.string().describe("Una frase, en primera persona, sin juicios ni culpables"),
-      lecturas: z.array(z.string()).describe("3 maneras distintas de leer lo que pasa"),
-      preguntas: z.array(z.string()).describe("2 o 3 preguntas que aclaren lo que falta saber"),
-      ...alerta,
-    }),
-    instruccion: "Convierte el relato en una situación neutra y trabajable. Si hay culpa o catástrofe en el relato, quítala sin minimizar lo que siente la persona.",
-  },
-  definir: {
-    esfuerzo: "medium",
-    esquema: z.object({
-      critica: z.string().describe("Qué debilidad tiene hoy la definición, en dos frases"),
-      definiciones: z.array(z.string()).describe("4 definiciones alternativas que abran caminos distintos"),
-      como_se_veria: z.string().describe("Cómo se vería resuelto, en algo observable"),
-      ...alerta,
-    }),
-    instruccion: "Pon a prueba la definición: ¿trae una solución escondida?, ¿culpa a alguien?, ¿confunde síntoma con problema? Propón otras formas de definirlo. Una definición que sea una pregunta del tipo «¿cómo puedo…?» suele abrir más caminos.",
-  },
-  causas: {
+  diagnostico: {
     esfuerzo: "high",
     esquema: z.object({
+      titulo: z.string().describe("Título corto del caso, máximo 8 palabras, sin culpables"),
+      categoria: z.enum(["personal", "trabajo", "proyecto"]),
+      urgencia: z.enum(["baja", "media", "alta"]),
+      situacion: z.string().describe("Lo que está pasando en una frase neutra, en primera persona"),
+      importancia: z.string().describe("Lo que la persona pierde si sigue igual, en una frase"),
+      definiciones: z.array(z.object({
+        texto: z.string().describe("El problema de fondo, en primera persona y menos de 16 palabras"),
+        por_que: z.string().describe("Qué pista del relato apunta a esto, en una frase"),
+      })).describe("Exactamente 4 lecturas realmente distintas del problema, de la más probable a la menos"),
       causas: z.array(z.object({
-        texto: z.string(),
-        tipo: z.enum(["hecho", "suposicion"]).describe("hecho si la persona lo afirma con evidencia; si no, suposicion"),
+        texto: z.string().describe("Causa posible, en primera persona y menos de 16 palabras"),
+        tipo: z.enum(["hecho", "suposicion"]).describe("hecho solo si el relato lo afirma; si no, suposicion"),
         como_verificar: z.string().describe("Cómo comprobarlo esta semana, sin gastar"),
-      })).describe("Entre 4 y 6 causas que la persona aún no anotó"),
-      pregunta_clave: z.string().describe("La pregunta incómoda que apunta a la causa raíz"),
+        por_que: z.array(z.string()).describe("2 o 3 «por qué» encadenados que llevan más al fondo"),
+      })).describe("Exactamente 5 causas, de la más probable a la menos; incluye lo que la persona misma pudo aportar"),
+      aclaracion: z.object({
+        pregunta: z.string(),
+        opciones: z.array(z.string()).describe("3 o 4 respuestas posibles, cortas"),
+      }).nullable().describe("Solo si el relato es tan ambiguo que el análisis cambiaría por completo. Casi siempre null"),
       ...alerta,
     }),
-    instruccion: "Propón causas que la persona no haya considerado, incluyendo lo que ella misma pudo aportar al problema. Una causa no es un síntoma: debe explicar por qué ocurre.",
+    instruccion: "Haz tú el análisis. La persona no va a responder preguntas: va a elegir entre lo que propongas, así que cada opción debe sonar a algo que ella misma diría. Desconfía de la primera lectura: a menudo el problema contado es un síntoma. Una definición no debe traer una solución escondida ni culpar a nadie. Una causa debe explicar por qué ocurre, no repetir el síntoma.",
   },
-  ideas: {
-    esfuerzo: "medium",
+  salidas: {
+    esfuerzo: "high",
     esquema: z.object({
       ideas: z.array(z.object({
-        texto: z.string().describe("Idea concreta, en menos de 15 palabras"),
-        angulo: z.string().describe("Qué ángulo aporta: invertir, eliminar, delegar, pedir ayuda, hacerlo más chico, etc."),
-      })).describe("Tantas ideas nuevas como se pidan"),
+        texto: z.string().describe("Idea concreta, en menos de 12 palabras, empezando con un verbo"),
+        angulo: z.string().describe("Una palabra o dos: invertir, eliminar, delegar, pedir ayuda, achicar, salir…"),
+      })).describe("Exactamente 20 ideas distintas que ataquen la causa elegida, incluyendo algunas audaces y la de dejar lo que no sirve"),
+      finalistas: z.array(z.object({
+        idea: z.number().describe("Número de la idea en la lista, desde 1"),
+        impacto: z.number().describe("De 1 a 5: cuánto ataca la causa"),
+        viable: z.number().describe("De 1 a 5: se puede hacer con lo que hay"),
+        rapido: z.number().describe("De 1 a 5: velocidad del resultado"),
+        riesgo: z.number().describe("De 1 a 5: 5 es muy bajo riesgo"),
+        por_que: z.string().describe("Por qué sirve en este caso, en una frase"),
+        contra: z.string().describe("Lo malo honesto de esta salida, en una frase"),
+      })).describe("Exactamente 3 finalistas, la mejor primero"),
+      supuesto_critico: z.string().describe("Lo que debe ser cierto para que la mejor funcione"),
+      como_probarlo: z.string().describe("Una prueba barata de ese supuesto"),
       ...alerta,
     }),
-    instruccion: "Agrega ideas distintas a las que ya existen, atacando la causa raíz desde ángulos que la persona no ha tocado. Incluye algunas audaces. No repitas ni reformules las existentes.",
+    instruccion: "Genera las ideas tú, sin juzgarlas al principio, y después evalúalas con rigor. Las finalistas deben ser realmente distintas entre sí, no variaciones de la misma idea.",
   },
-  desafiar: {
+  ejecucion: {
     esfuerzo: "high",
     esquema: z.object({
-      debilidades: z.array(z.string()).describe("Las 3 debilidades más serias de la opción elegida"),
-      supuesto_critico: z.string().describe("El supuesto que, si es falso, tumba la decisión"),
-      como_probarlo: z.string().describe("Una prueba barata para comprobar ese supuesto antes de comprometerse"),
-      mejora: z.string().describe("Cómo fortalecer la opción sin cambiarla"),
-      ...alerta,
-    }),
-    instruccion: "Actúa como abogado del diablo honesto de la opción elegida. Si la decisión es buena, dilo y concentra la crítica en lo que sí puede fallar. No cambies la decisión por la persona.",
-  },
-  premortem: {
-    esfuerzo: "high",
-    esquema: z.object({
-      riesgos: z.array(z.object({
-        texto: z.string().describe("Qué podría salir mal"),
-        senal: z.string().describe("Señal temprana y observable"),
-        respuesta: z.string().describe("Qué hacer si aparece"),
-      })).describe("Entre 3 y 5 riesgos"),
-      plan_b: z.string().describe("La alternativa concreta si la opción elegida falla"),
-      disparador: z.string().describe("Condición objetiva y fechada que activa el plan B"),
-      ...alerta,
-    }),
-    instruccion: "Imagina que pasaron seis meses y la solución fracasó. Explica qué pasó, y conviértelo en riesgos con señales tempranas y un plan B.",
-  },
-  meta: {
-    esfuerzo: "medium",
-    esquema: z.object({
-      indicador: z.string().describe("Lo que se va a medir, en palabras simples"),
-      unidad: z.string().describe("Unidad corta: pesos, horas, %, veces por semana…"),
-      como_medir: z.string().describe("Cómo obtener el número cada semana"),
+      indicador: z.string().describe("Un único número que muestre si se está resolviendo: mide el resultado, no el esfuerzo"),
+      unidad: z.string().describe("Unidad corta: %, pesos, horas, veces por semana, nota de 0 a 10…"),
+      hoy: z.number().nullable().describe("Valor de hoy solo si el relato lo dice; si no, null"),
+      objetivo: z.number().nullable().describe("Valor objetivo razonable, o null si depende del valor de hoy"),
       plazo_dias: z.number().describe("Plazo realista en días"),
-      razon: z.string(),
-      ...alerta,
-    }),
-    instruccion: "Propón un único indicador numérico que muestre si el problema se está resolviendo: que mida el resultado y no el esfuerzo. Si el problema parece no medible, usa una escala de 0 a 10 evaluada por la persona con un criterio fijo.",
-  },
-  plan: {
-    esfuerzo: "high",
-    esquema: z.object({
+      estrategia: z.string().describe("Cómo se va a abordar, en dos frases, incluyendo qué se deja de hacer"),
       pasos: z.array(z.object({
         titulo: z.string().describe("Empieza con un verbo; se hace en una sesión o una semana como máximo"),
         criterio_hecho: z.string().describe("Cómo se comprueba que quedó hecho"),
-        prioridad: z.enum(["A", "B", "C", "D", "E"]),
+        prioridad: z.enum(["A", "B", "C", "D"]).describe("A: consecuencias serias si no se hace. B: conviene. C: sería bueno. D: delegable"),
         dias_desde_hoy: z.number().describe("Días desde hoy hasta su vencimiento"),
         depende_del_paso: z.number().nullable().describe("Número (desde 1) del paso previo requerido, o null"),
-      })).describe("Entre 5 y 12 pasos en orden"),
-      primer_movimiento: z.string().describe("Lo que se puede hacer en las próximas 24 horas"),
+      })).describe("Entre 5 y 9 pasos en orden; el primero se puede empezar en 48 horas; máximo 3 de prioridad A"),
+      riesgos: z.array(z.object({
+        texto: z.string(), senal: z.string().describe("Señal temprana observable"), respuesta: z.string(),
+      })).describe("Los 3 riesgos más serios: imagina que en seis meses esto fracasó y explica por qué"),
+      plan_b: z.string().describe("La alternativa concreta si la salida elegida falla"),
+      disparador: z.string().describe("Condición objetiva y fechada que activa el plan B"),
+      compromiso: z.string().describe("El compromiso en primera persona, una frase, empezando con «Me hago cargo de»"),
       ...alerta,
     }),
-    instruccion: "Arma el plan para llegar a la meta antes de la fecha. Prioridades: A = hay consecuencias serias si no se hace; B = conviene; C = sería bueno; D = delegable; E = eliminar (no la uses en pasos nuevos). El primer paso debe poder empezarse en 48 horas. Máximo 3 pasos A.",
+    instruccion: "Convierte la salida elegida en un plan listo para ejecutar, que la persona solo tenga que revisar. Si el problema no tiene un número natural, usa una nota de 0 a 10 evaluada con un criterio fijo.",
   },
   revision: {
     esfuerzo: "high",
@@ -148,11 +126,11 @@ export const TAREAS = {
 export type TareaId = keyof typeof TAREAS;
 export type Resultado<T extends TareaId> = z.infer<(typeof TAREAS)[T]["esquema"]>;
 
-export const SISTEMA = `Eres el copiloto de un método para resolver problemas reales, personales o de trabajo. Acompañas a una persona por etapas: encuadrar la situación, definirla por escrito, encontrar causas, generar muchas salidas, decidir, preparar un plan B, fijar una meta medible, planificar pasos y hacer seguimiento hasta verificar el resultado.
+export const SISTEMA = `Eres el copiloto de un método para resolver problemas reales, personales o de trabajo. La persona cuenta su problema una vez y tú haces el trabajo de análisis: encuadrar la situación, definirla, encontrar causas, generar muchas salidas, evaluarlas, preparar un plan B, fijar una meta medible y planificar los pasos. Ella elige entre lo que propones, y después haces seguimiento hasta verificar el resultado.
 
 Cómo trabajas:
 - Hablas en español neutro de Chile, de tú, con frases cortas y sin frases hechas ni motivación vacía.
-- La persona decide; tú propones, cuestionas y ordenas. Nunca presentes una opción como la obligatoria.
+- La persona decide; tú propones y ordenas. Haz el trabajo tú en vez de devolverle preguntas. Nunca presentes una opción como la obligatoria.
 - Tratas el problema como una situación con salida: sin dramatizar y sin restarle importancia.
 - Separas lo que se sabe de lo que se supone.
 - Lo concreto gana: si una idea no se puede hacer esta semana, bájala a algo que sí.

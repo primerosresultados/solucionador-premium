@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, Ban, CalendarClock, CalendarPlus, Check, CircleCheck, Pause, Play, Plus, ShieldAlert, Trash2, Undo2, X } from "lucide-react";
+import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition, type ReactNode } from "react";
 import {
@@ -10,7 +11,10 @@ import type { Caso, Paso, Revision } from "@/lib/casos";
 import { diasEntre, fechaCorta, fechaLarga, hoyChile, sumarDias } from "@/lib/fechas";
 import type { Resultado } from "@/lib/ia/tareas";
 import { ETIQUETA_SALUD, type Salud } from "@/lib/salud";
-import { FormPaso } from "./ejecutar";
+import { celebrar } from "@/components/movimiento/celebracion";
+import { PanelHilo } from "@/components/movimiento/panel-hilo";
+import { Contador, Medidor } from "@/components/movimiento/piezas";
+import { FormPaso } from "./formulario-paso";
 import { GraficoIndicador } from "./grafico";
 import { Alerta, ApoyoCuidado, Campo, Copiloto, Dictar } from "./piezas";
 
@@ -38,7 +42,7 @@ function Hoja({ titulo, alCerrar, children }: { titulo: string; alCerrar: () => 
   );
 }
 
-function usarAccion(alListo?: () => void) {
+function usarAccion(alListo?: () => void, festejo?: { texto: string; detalle?: string }) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [pendiente, iniciar] = useTransition();
@@ -48,6 +52,7 @@ function usarAccion(alListo?: () => void) {
     if (!r.ok) { setError(r.error); return; }
     router.refresh();
     alListo?.();
+    if (festejo) celebrar(festejo.texto, festejo.detalle);
   });
   return { error, pendiente, correr };
 }
@@ -56,7 +61,7 @@ function HojaPaso({ casoId, paso, alCerrar }: { casoId: string; paso: Paso; alCe
   const [modo, setModo] = useState<null | "hecho" | "bloquear" | "reprogramar" | "descartar">(null);
   const [nota, setNota] = useState("");
   const [fecha, setFecha] = useState(paso.venceEn);
-  const { error, pendiente, correr } = usarAccion(alCerrar);
+  const { error, pendiente, correr } = usarAccion(alCerrar, modo === "hecho" ? { texto: "Paso hecho", detalle: paso.titulo } : undefined);
   const accion = (c: Record<string, unknown>) => correr(() => cambiarPaso(casoId, paso.id, c));
   const hecho = paso.estado === "hecho";
 
@@ -213,8 +218,10 @@ function FilaPaso({ paso, hoy, siguienteId, alAbrir }: { paso: Paso; hoy: string
   const descartado = paso.estado === "descartado";
   const vencido = !hecho && !descartado && paso.venceEn < hoy;
   return (
-    <button onClick={alAbrir} className="w-full text-left flex items-center gap-3 py-3 min-h-14 border-b border-hundido last:border-0">
-      <span className={`marca ${hecho ? "bg-bien text-superficie" : "bg-hundido"}`}>{hecho && <Check size={15} strokeWidth={3} />}</span>
+    <button onClick={alAbrir} className="group w-full text-left flex items-center gap-3 py-3 min-h-14 border-b border-hundido last:border-0 transition-transform duration-200 hover:translate-x-0.5">
+      <span className={`marca transition-colors duration-200 ${hecho ? "bg-bien text-superficie" : "bg-hundido group-hover:bg-acento-suave"}`}>
+        {hecho && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 16 }}><Check size={15} strokeWidth={3} /></motion.span>}
+      </span>
       <span className="flex-1 min-w-0">
         <span className={`block leading-snug ${hecho || descartado ? "text-tinta-3 line-through" : "font-semibold"}`}>{paso.titulo}</span>
         <span className="flex flex-wrap items-center gap-x-2 text-[14px] text-tinta-3 mt-0.5">
@@ -295,15 +302,23 @@ export function Seguimiento({ caso, pasos, revisiones, eventos, salud, hoy, sigu
         <h1 className="mt-3 text-[28px] sm:text-[36px] leading-[1.1] font-semibold">{caso.titulo}</h1>
       </header>
 
-      {enMarcha && (
-        <section className="rounded-[var(--radius-tarjeta)] bg-contraste text-contraste-tinta p-5 sm:p-7">
-          <p className="text-[12px] font-semibold tracking-[.08em] text-contraste-2">Ahora</p>
-          <p className="mt-1 font-titulo font-semibold text-[24px] leading-[1.15]">{salud.accion.texto}</p>
-          <button onClick={hacerAccion} disabled={accion.pendiente} className="btn mt-4 w-full sm:w-auto bg-contraste-tinta text-contraste">
-            {{ paso: "Abrir paso", destrabar: "Destrabar", revision: "Revisar ahora", plan_b: "Ver plan B", cerrar: "Marcar meta lograda", replanificar: "Agregar paso" }[salud.accion.tipo]} <ArrowRight size={18} />
-          </button>
+      <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+        {enMarcha ? (
+          <section className="escena-noche relative overflow-hidden rounded-[var(--radius-tarjeta)] p-6 sm:p-8 min-h-[300px] flex flex-col justify-end shadow-[0_30px_70px_-34px_rgba(16,30,160,.9)]">
+            <div aria-hidden className="absolute inset-x-0 top-0 h-[44%] opacity-90"><PanelHilo avance={Math.min(.92, .12 + salud.avancePasos / 100)} centro={.55} /></div>
+            <div className="relative z-10">
+              <p className="text-[14px] font-medium text-sol">Ahora</p>
+              <p className="mt-1 font-semibold text-[25px] sm:text-[30px] leading-[1.12] tracking-[-.025em] max-w-[22em]">{salud.accion.texto}</p>
+              <button onClick={hacerAccion} disabled={accion.pendiente} className="btn mt-4 w-full sm:w-auto bg-sol text-sol-tinta hover:-translate-y-px">
+                {{ paso: "Abrir paso", destrabar: "Destrabar", revision: "Revisar ahora", plan_b: "Ver plan B", cerrar: "Marcar meta lograda", replanificar: "Agregar paso" }[salud.accion.tipo]} <ArrowRight size={18} />
+              </button>
+            </div>
+          </section>
+        ) : <div className="hidden" />}
+        <section className={`tarjeta flex flex-col items-center justify-center ${enMarcha ? "" : "lg:col-span-2"}`}>
+          <Medidor valor={salud.puntaje} etiqueta={enMarcha ? ETIQUETA_SALUD[salud.estado] : "Salud"} />
         </section>
-      )}
+      </div>
       {accion.error && <Alerta tipo="ojo">{accion.error}</Alerta>}
 
       {caso.estado === "pausado" && (
@@ -336,38 +351,16 @@ export function Seguimiento({ caso, pasos, revisiones, eventos, salud, hoy, sigu
         </section>
       )}
 
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Dato etiqueta="Salud" valor={`${salud.puntaje}`} nota="de 100" />
-        <Dato etiqueta="Pasos" valor={`${salud.avancePasos}%`} nota={`Debería ir en ${salud.avanceEsperado}%`} />
+      <section className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+        <Dato etiqueta="Pasos" valor={<Contador valor={salud.avancePasos} sufijo="%" />} nota={`Debería ir en ${salud.avanceEsperado}%`} />
         <Dato etiqueta="Indicador" valor={actual !== null ? unidadCorta(actual, caso.unidad ?? "") : "Sin medir"} chico={actual === null}
           nota={caso.objetivo !== null ? `Meta: ${unidadCorta(caso.objetivo, caso.unidad ?? "")}${caso.unidad && caso.unidad !== "%" ? ` ${caso.unidad}` : ""}` : ""} />
-        <Dato etiqueta="Fecha límite" valor={caso.fechaObjetivo ? fechaCorta(caso.fechaObjetivo) : "—"} chico
-          nota={salud.proyeccion ? `A tu ritmo: ${fechaCorta(salud.proyeccion)}` : "Aún sin ritmo"} />
+        <div className="col-span-2 lg:col-span-1"><Dato etiqueta="Fecha límite" valor={caso.fechaObjetivo ? fechaCorta(caso.fechaObjetivo) : "—"} chico
+          nota={salud.proyeccion ? `A tu ritmo: ${fechaCorta(salud.proyeccion)}` : "Aún sin ritmo"} /></div>
       </section>
 
-      {salud.motivos.length > 0 && enMarcha && (
-        <section className="tarjeta">
-          <h2 className="text-[20px] font-semibold">Por qué vas así</h2>
-          <ul className="mt-3 space-y-2">
-            {salud.motivos.map((m) => (
-              <li key={m.texto} className="flex gap-2.5 items-start">
-                <span aria-hidden className={`mt-[7px] size-2.5 flex-none rounded-full ${{ bien: "bg-bien", ojo: "bg-ojo", mal: "bg-mal" }[m.peso]}`} />
-                <span className="leading-snug">{m.texto}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {caso.lineaBase !== null && caso.objetivo !== null && caso.fechaInicio && caso.fechaObjetivo && (
-        <section className="tarjeta">
-          <h2 className="text-[20px] font-semibold">{caso.indicador}</h2>
-          <div className="mt-3">
-            <GraficoIndicador base={caso.lineaBase} objetivo={caso.objetivo} inicio={caso.fechaInicio} fin={caso.fechaObjetivo} unidad={caso.unidad ?? ""}
-              puntos={medidas.map((r) => ({ fecha: r.fecha, valor: r.valor! }))} />
-          </div>
-        </section>
-      )}
+      <div className="grid gap-4 items-start lg:grid-cols-[1.25fr_1fr]">
+      <div className="space-y-4 min-w-0">
 
       <section className="tarjeta">
         <div className="flex items-center justify-between gap-3">
@@ -396,6 +389,46 @@ export function Seguimiento({ caso, pasos, revisiones, eventos, salud, hoy, sigu
         </section>
       )}
 
+      <section className="tarjeta">
+        <h2 className="text-[20px] font-semibold">Bitácora</h2>
+        <ol className="mt-3 relative">
+          <span aria-hidden className="absolute left-[4px] top-2 bottom-2 w-px bg-hundido" />
+          {eventos.map((e) => (
+            <li key={e.id} className="relative flex gap-3 pl-5 pb-3 last:pb-0">
+              <span aria-hidden className="absolute left-0 top-[7px] size-[9px] rounded-full bg-acento ring-[3px] ring-superficie" />
+              <time className="text-[14px] text-tinta-3 w-14 shrink-0 tabular-nums pt-px">{new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "short", timeZone: "America/Santiago" }).format(new Date(e.creadoEn)).replace(".", "")}</time>
+              <span className="leading-snug">{e.detalle}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      </div>
+      <div className="space-y-4 min-w-0 order-first lg:order-none lg:sticky lg:top-5">
+      {caso.lineaBase !== null && caso.objetivo !== null && caso.fechaInicio && caso.fechaObjetivo && (
+        <section className="tarjeta">
+          <h2 className="text-[20px] font-semibold">{caso.indicador}</h2>
+          <div className="mt-3">
+            <GraficoIndicador base={caso.lineaBase} objetivo={caso.objetivo} inicio={caso.fechaInicio} fin={caso.fechaObjetivo} unidad={caso.unidad ?? ""}
+              puntos={medidas.map((r) => ({ fecha: r.fecha, valor: r.valor! }))} />
+          </div>
+        </section>
+      )}
+
+      {salud.motivos.length > 0 && enMarcha && (
+        <section className="tarjeta">
+          <h2 className="text-[20px] font-semibold">Por qué vas así</h2>
+          <ul className="mt-3 space-y-2">
+            {salud.motivos.map((m) => (
+              <li key={m.texto} className="flex gap-2.5 items-start">
+                <span aria-hidden className={`mt-[7px] size-2.5 flex-none rounded-full ${{ bien: "bg-bien", ojo: "bg-ojo", mal: "bg-mal" }[m.peso]}`} />
+                <span className="leading-snug">{m.texto}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {caso.trabajo.planB && (
         <section id="plan-b" className="tarjeta scroll-mt-4">
           <h2 className="text-[20px] font-semibold flex items-center gap-2"><ShieldAlert size={19} aria-hidden /> Plan B</h2>
@@ -406,23 +439,14 @@ export function Seguimiento({ caso, pasos, revisiones, eventos, salud, hoy, sigu
         </section>
       )}
 
-      <section className="tarjeta">
-        <h2 className="text-[20px] font-semibold">Bitácora</h2>
-        <ol className="mt-3 space-y-3">
-          {eventos.map((e) => (
-            <li key={e.id} className="flex gap-3">
-              <time className="text-[14px] text-tinta-3 w-14 shrink-0 tabular-nums pt-px">{new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "short", timeZone: "America/Santiago" }).format(new Date(e.creadoEn)).replace(".", "")}</time>
-              <span className="leading-snug">{e.detalle}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
+      </div>
+      </div>
 
       {enMarcha && (
         <>
           <button className="btn btn-3" disabled={accion.pendiente} onClick={() => accion.correr(() => pausar(caso.id, true))}><Pause size={16} /> Pausar este caso</button>
           <div className="fixed inset-x-0 bottom-0 z-20 bg-lienzo/90 backdrop-blur-md pb-[env(safe-area-inset-bottom)]">
-            <div className="mx-auto max-w-[760px] px-5 py-3 flex items-center justify-between gap-3">
+            <div className="contenedor py-3 flex items-center justify-between gap-3">
               <p className="text-[14px] text-tinta-2 min-w-0 truncate">{caso.proximaRevision ? `Próxima revisión: ${fechaCorta(caso.proximaRevision)}` : ""}</p>
               <button className="btn btn-1" onClick={() => setHoja("revision")}>Hacer revisión</button>
             </div>
@@ -437,11 +461,11 @@ export function Seguimiento({ caso, pasos, revisiones, eventos, salud, hoy, sigu
   );
 }
 
-function Dato({ etiqueta, valor, nota, chico }: { etiqueta: string; valor: string; nota: string; chico?: boolean }) {
+function Dato({ etiqueta, valor, nota, chico }: { etiqueta: string; valor: ReactNode; nota: string; chico?: boolean }) {
   return (
-    <div className="tarjeta !p-4">
-      <p className="etiqueta">{etiqueta}</p>
-      <p className={`mt-1 font-titulo font-semibold leading-none tabular-nums ${chico ? "text-[24px] py-1" : "text-[34px]"}`}>{valor}</p>
+    <div className="tarjeta !p-5 h-full">
+      <p className="text-[14px] font-medium text-tinta-3">{etiqueta}</p>
+      <p className={`mt-1.5 font-semibold leading-none tracking-[-.03em] tabular-nums ${chico ? "text-[26px] py-1" : "text-[38px]"}`}>{valor}</p>
       <p className="mt-1 text-[14px] text-tinta-3 leading-snug">{nota}</p>
     </div>
   );

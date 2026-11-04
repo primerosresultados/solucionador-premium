@@ -23,8 +23,8 @@ export async function desbloquearCaso(usuarioId: string, casoId: string, ctx?: T
     if (caso.desbloqueadoEn) return true;
     if ((await saldoCreditos(usuarioId, tx)) < 1) return false;
     await tx.insert(creditos).values({ usuarioId, delta: -1, motivo: "caso", casoId });
-    // El muro aparece al salir de la etapa gratis: al abrirse, el caso ya está en la 2.
-    await tx.update(casos).set({ desbloqueadoEn: new Date(), etapa: sql`greatest(${casos.etapa}, 2)` }).where(eq(casos.id, casoId));
+    // El muro aparece al terminar los pasos gratis: al abrirse, el caso sigue en el 3.
+    await tx.update(casos).set({ desbloqueadoEn: new Date(), etapa: sql`greatest(${casos.etapa}, 3)` }).where(eq(casos.id, casoId));
     return true;
   };
   return ctx ? correr(ctx) : db.transaction(correr);

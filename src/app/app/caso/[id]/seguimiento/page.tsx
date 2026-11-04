@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { Seguimiento } from "@/components/caso/seguimiento";
-import { Regla } from "@/components/regla";
+import { Avance } from "@/components/caso/avance";
 import { exigirSesion } from "@/lib/auth";
 import { casoDe, eventosDe, pasosDe, revisionesDe, saludDe } from "@/lib/casos";
 import { hoyChile } from "@/lib/fechas";
@@ -19,7 +19,7 @@ export default async function Pagina({ params }: { params: Promise<{ id: string 
   const salud = saludDe(caso, pasos, revisiones, hoy);
   return (
     <>
-      <div className="mb-6"><Regla actual={10} alcanzada={10} casoId={id} /></div>
+      <div className="mb-4"><Avance actual={5} alcanzado={5} casoId={id} /></div>
       <Seguimiento caso={caso} pasos={pasos} revisiones={revisiones} eventos={eventos} salud={salud} hoy={hoy}
         siguienteId={siguientePaso(pasos as PasoSalud[])?.id} />
     </>

@@ -23,8 +23,10 @@
   /* Portada: no cambian con el modo oscuro, son una escena fija */
   --color-cobalto: #1c32c9;
   --color-cobalto-2: #bcc6ff;
-  --color-noche: #0d1340;
-  --color-noche-2: #1b2360;
+  --color-noche: #070a24;
+  --color-noche-2: #141a4a;
+  --color-noche-3: #232c78;
+  --color-luz: #8ea0ff;
   --color-sol: #ffc83d;
   --color-sol-tinta: #1a1605;
   --color-papel: #fdfcf9;
@@ -34,7 +36,7 @@
 
   --radius-tarjeta: 22px;
   --radius-control: 14px;
-  --shadow-suave: 0 6px 20px -10px rgba(21, 23, 28, .16);
+  --shadow-suave: 0 0 0 1px rgba(21, 23, 28, .04), 0 1px 2px rgba(21, 23, 28, .04), 0 14px 34px -18px rgba(21, 23, 28, .2);
   --shadow-hoja: 0 -12px 40px -12px rgba(21, 23, 28, .28);
   --ease-suave: cubic-bezier(.22, 1, .36, 1);
 }
@@ -59,7 +61,7 @@
     --color-contraste: #f1f0ec;
     --color-contraste-tinta: #15171c;
     --color-contraste-2: #4a4e57;
-    --shadow-suave: 0 6px 20px -10px rgba(0, 0, 0, .6);
+    --shadow-suave: 0 0 0 1px rgba(255, 255, 255, .06), 0 16px 36px -18px rgba(0, 0, 0, .7);
     --shadow-hoja: 0 -12px 40px -12px rgba(0, 0, 0, .7);
   }
 }
@@ -74,7 +76,11 @@
 }
 
 @layer components {
-  .tarjeta { background: var(--color-superficie); border-radius: var(--radius-tarjeta); box-shadow: var(--shadow-suave); padding: 20px; }
+  /* Un solo borde para todo el sitio: portada, app y barras */
+  .contenedor { width: 100%; max-width: 1264px; margin-inline: auto; padding-inline: 20px; }
+  @media (min-width: 640px) { .contenedor { padding-inline: 32px; } }
+
+  .tarjeta { background: var(--color-superficie); border-radius: var(--radius-tarjeta); box-shadow: var(--shadow-suave); padding: 22px; }
   @media (min-width: 640px) { .tarjeta { padding: 28px; } }
 
   .etiqueta { font-size: 12px; font-weight: 600; letter-spacing: .08em; color: var(--color-tinta-3); }
@@ -87,17 +93,29 @@
   }
   .btn:active { transform: scale(.98); }
   .btn:disabled { opacity: .5; cursor: not-allowed; }
-  .btn-1 { background: var(--color-acento); color: var(--color-acento-tinta); }
+  .btn-1 {
+    position: relative; overflow: hidden; color: var(--color-acento-tinta);
+    background: linear-gradient(180deg, color-mix(in oklab, var(--color-acento) 86%, white), var(--color-acento));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 10px 26px -12px var(--color-acento);
+  }
+  .btn-1:not(:disabled):hover { transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 14px 32px -12px var(--color-acento); }
+  .btn-1::after {
+    content: ""; position: absolute; inset: 0; transform: translateX(-120%);
+    background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.28) 50%, transparent 65%);
+    transition: transform 700ms var(--ease-suave);
+  }
+  .btn-1:not(:disabled):hover::after { transform: translateX(120%); }
   .btn-2 { background: var(--color-hundido); color: var(--color-tinta); }
+  .btn-2:not(:disabled):hover { background: color-mix(in oklab, var(--color-hundido) 88%, var(--color-tinta)); }
   .btn-3 { background: transparent; color: var(--color-tinta-2); padding: 0 12px; }
   .btn-chico { min-height: 44px; padding: 0 16px; font-size: 15px; }
 
   .campo {
     width: 100%; min-height: 48px; padding: 12px 14px; font-size: 16px; line-height: 1.5;
     background: var(--color-hundido); color: var(--color-tinta); border-radius: var(--radius-control);
-    border: 0; outline: 2px solid transparent; transition: outline-color 160ms var(--ease-suave);
+    border: 0; outline: 2px solid transparent; transition: outline-color 160ms var(--ease-suave), box-shadow 200ms var(--ease-suave), background-color 160ms;
   }
-  .campo:focus { outline-color: var(--color-acento); }
+  .campo:focus { outline-color: var(--color-acento); box-shadow: 0 0 0 5px var(--color-acento-suave); background: var(--color-superficie); }
   .campo::placeholder { color: var(--color-tinta-3); }
   textarea.campo { resize: vertical; display: block; }
 
@@ -115,7 +133,7 @@
     flex: 0 0 28px; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px;
     font-size: 13px; font-weight: 700; background: var(--color-hundido); color: var(--color-tinta-2);
   }
-  .prioridad-A { background: var(--color-acento); color: var(--color-acento-tinta); }
+  .prioridad-A { background: linear-gradient(160deg, var(--color-luz), var(--color-acento)); color: #fff; }
 
   .marca { flex: 0 0 26px; width: 26px; height: 26px; border-radius: 999px; display: grid; place-items: center; }
 
@@ -127,6 +145,55 @@
 @keyframes hilo-trazo { to { stroke-dashoffset: 0; } }
 @keyframes hilo-sol { to { transform: scale(1); } }
 
+/* Escena fija oscura: reasigna los tokens para lo que vive adentro */
+.escena-noche {
+  --color-superficie: #10153d;
+  --color-hundido: #1c2359;
+  --color-tinta: #f4f4fb;
+  --color-tinta-2: #bcc3ec;
+  --color-tinta-3: #8c94c8;
+  --color-acento: #8ea0ff;
+  --color-acento-tinta: #070a24;
+  --color-acento-suave: #232c78;
+  background-color: var(--color-noche);
+  color: var(--color-tinta);
+}
+
+.grano { isolation: isolate; }
+.grano::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: .045; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Borde de luz que gira: lo que se vende lleva este borde */
+@property --giro { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.borde-luz { position: relative; isolation: isolate; border-radius: 28px; }
+.borde-luz::after { content: ""; position: absolute; inset: 1.5px; z-index: -1; border-radius: 26.5px; background: var(--color-noche-2); }
+.borde-luz::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: 28px;
+  background: conic-gradient(from var(--giro), var(--color-sol), var(--color-luz), #fff 30%, var(--color-cobalto), var(--color-sol));
+  animation: girar 6s linear infinite;
+}
+@keyframes girar { to { --giro: 360deg; } }
+
+/* La barra de la historia es su propio reloj: pausarla detiene el avance */
+.relleno { width: 0; animation: llenar var(--d) linear forwards; }
+.relleno.lleno { width: 100%; animation: none; }
+.relleno-oculto { display: block; height: 0; width: 0; animation: llenar var(--d) linear forwards; }
+.pausado { animation-play-state: paused; }
+@keyframes llenar { to { width: 100%; } }
+
+.marquesina { display: flex; width: max-content; animation: deslizar var(--dur, 40s) linear infinite; }
+.marquesina-inversa { animation-direction: reverse; }
+@keyframes deslizar { to { transform: translateX(-50%); } }
+
+.brillo-texto {
+  background: linear-gradient(100deg, currentColor 30%, var(--color-sol) 50%, currentColor 70%) 0 0 / 240% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: barrer 2.2s linear infinite;
+}
+@keyframes barrer { to { background-position: -240% 0; } }
+
 @keyframes latido { 50% { opacity: .5; } }
 @keyframes aparecer { from { opacity: 0; transform: translateY(6px); } }
 @keyframes subir { from { transform: translateY(100%); } }
@@ -137,4 +204,6 @@
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .hilo { stroke-dashoffset: 0; }
   .hilo-sol { transform: scale(1); }
+  .brillo-texto { color: inherit; background: none; }
+  .relleno { width: 100%; }
 }

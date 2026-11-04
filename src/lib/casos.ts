@@ -6,7 +6,7 @@ import { casos, eventos, pasos, revisiones, usuarios } from "@/db/schema";
 import { encolar, enviarPendientes, plantilla } from "./correo";
 import { hoyChile, sumarDias } from "./fechas";
 import { appUrl } from "./marca";
-import { CATEGORIAS, IDEA_NO_HACER_NADA, puntajeOpcion, URGENCIAS, type Categoria, type Urgencia } from "./metodo";
+import { CATEGORIAS, URGENCIAS, type Categoria, type Urgencia } from "./metodo";
 import { avisosDelDia, calcularSalud, ETIQUETA_SALUD, resumenSemanal, type EstadoSalud, type PasoSalud, type Salud } from "./salud";
 
 export type Caso = typeof casos.$inferSelect;
@@ -59,19 +59,16 @@ export function contextoCaso(c: Caso, ps: Paso[] = [], rs: Revision[] = []) {
   const agregar = (etiqueta: string, valor?: string | number | null) => {
     if (valor !== undefined && valor !== null && String(valor).trim()) l.push(`${etiqueta}: ${valor}`);
   };
-  agregar("Tipo de problema", CATEGORIAS[c.categoria as Categoria]);
-  agregar("Urgencia", URGENCIAS[c.urgencia as Urgencia]?.nombre);
+  if (t.definicionFinal) {
+    agregar("Tipo de problema", CATEGORIAS[c.categoria as Categoria]);
+    agregar("Urgencia", URGENCIAS[c.urgencia as Urgencia]?.nombre);
+  }
   agregar("Lo que cuenta la persona", t.relato);
   agregar("Situación", t.situacion);
   agregar("Por qué importa", t.importancia);
-  if (t.definiciones.length) l.push(`Definiciones:\n${t.definiciones.map((d) => `- ${d}`).join("\n")}`);
-  agregar("Definición elegida", t.definicionFinal);
-  agregar("Cómo se vería resuelto", t.comoSabre);
-  if (t.causas.length) l.push(`Causas:\n${t.causas.map((x) => `- ${x.texto} (${x.evidencia}${x.esRaiz ? ", CAUSA RAÍZ" : ""})${x.porQue.length ? `; por qué: ${x.porQue.join(" → ")}` : ""}`).join("\n")}`);
-  agregar("Si empezara de cero", t.empezarDeCero);
-  if (t.ideas.length > 1) l.push(`Ideas existentes:\n${t.ideas.filter((i) => i.id !== IDEA_NO_HACER_NADA).map((i) => `- ${i.texto}`).join("\n")}`);
-  if (t.opciones.length) l.push(`Opciones comparadas:\n${t.opciones.map((o) => `- ${t.ideas.find((i) => i.id === o.ideaId)?.texto} (${puntajeOpcion(o, t.criterios)}/100)`).join("\n")}`);
-  agregar("Opción elegida", decision?.texto);
+  agregar("Problema elegido", t.definicionFinal);
+  if (t.causas.length) l.push(`Causa elegida: ${t.causas.filter((x) => x.esRaiz).map((x) => `${x.texto}${x.porQue.length ? `; por qué: ${x.porQue.join(" → ")}` : ""}`).join("; ")}`);
+  agregar("Salida elegida", decision?.texto);
   agregar("Razón", t.razonDecision);
   agregar("Estrategia", t.estrategia);
   agregar("Plan B", t.planB);

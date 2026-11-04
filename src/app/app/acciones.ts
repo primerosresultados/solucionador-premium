@@ -1,7 +1,7 @@
 "use server";
 
 import { randomUUID } from "crypto";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, count, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -11,9 +11,9 @@ import { cerrarSesion, cifrarClave, exigirSesion } from "@/lib/auth";
 import { actualizarSalud, casoDe, contextoCaso, iniciarEjecucion, pasosDe, registrar, revisionesDe, saludDe, type Caso } from "@/lib/casos";
 import { crearOrden, desbloquearCaso } from "@/lib/compras";
 import { hoyChile, sumarDias } from "@/lib/fechas";
-import { consultar, ErrorCopiloto, verificarCuota } from "@/lib/ia/cliente";
+import { consultar, ErrorCopiloto, LIMITE_CASOS_GRATIS_POR_DIA, verificarCuota } from "@/lib/ia/cliente";
 import type { Resultado, TareaId } from "@/lib/ia/tareas";
-import { DIAS_VERIFICACION, ETAPA_GRATIS, faltantes, ideasPropias, MIN_IDEAS, MIN_IDEAS_PROPIAS_PARA_COPILOTO, trabajoInicial } from "@/lib/metodo";
+import { causaRaiz, DIAS_VERIFICACION, salidaElegida, trabajoInicial, type Trabajo } from "@/lib/metodo";
 import { PLANES, type PlanId } from "@/lib/planes";
 
 export type Respuesta<T = unknown> = ({ ok: true } & T) | { ok: false; error: string };
@@ -32,87 +32,154 @@ async function casoPropio(casoId: string) {
 
 const refrescar = (casoId: string) => revalidatePath(`/app/caso/${casoId}`, "layout");
 
-const casoNuevo = z.object({
-  relato: texto(6000).min(30, "Cuéntalo con un poco más de detalle."),
-  categoria: z.enum(["personal", "trabajo", "proyecto"]),
-  urgencia: z.enum(["baja", "media", "alta"]),
-});
-
-export async function crearCaso(datos: unknown): Promise<Respuesta<{ id: string }>> {
+export async function crearCaso(relato: string): Promise<Respuesta<{ id: string }>> {
   const sesion = await exigirSesion();
-  const r = casoNuevo.safeParse(datos);
+  const r = texto(6000).min(30, "Cuéntalo con un poco más de detalle: unas dos frases bastan.").safeParse(relato);
   if (!r.success) return { ok: false, error: r.error.issues[0].message };
-  const { relato, categoria, urgencia } = r.data;
-  const trabajo = { ...trabajoInicial(), relato };
+  const [{ n }] = await db.select({ n: count() }).from(casos)
+    .where(and(eq(casos.usuarioId, sesion.id), isNull(casos.desbloqueadoEn), gt(casos.creadoEn, new Date(Date.now() - 86_400_000))));
+  if (n >= LIMITE_CASOS_GRATIS_POR_DIA) return { ok: false, error: "Abriste varios casos hoy. Sigue con alguno de los que tienes o vuelve mañana." };
   const [c] = await db.insert(casos).values({
-    usuarioId: sesion.id, trabajo, categoria, urgencia,
-    titulo: relato.length > 60 ? `${relato.slice(0, 57).trimEnd()}…` : relato,
+    usuarioId: sesion.id, trabajo: { ...trabajoInicial(), relato: r.data },
+    titulo: r.data.length > 60 ? `${r.data.slice(0, 57).trimEnd()}…` : r.data,
   }).returning({ id: casos.id });
   await registrar(c.id, "creado", "Abriste este caso.");
   return { ok: true, id: c.id };
 }
 
-const parche = z.object({
-  relato: texto(6000), situacion: texto(1000), importancia: texto(1000),
-  definiciones: z.array(texto(400)).max(12), definicionFinal: texto(600), comoSabre: texto(800),
-  causas: z.array(z.object({
-    id: z.string().max(40), texto: texto(400), evidencia: z.enum(["hecho", "suposicion"]),
-    porQue: z.array(texto(300)).max(6), esRaiz: z.boolean(),
-  })).max(30),
-  empezarDeCero: texto(800),
-  ideas: z.array(z.object({ id: z.string().max(40), texto: texto(300), origen: z.enum(["persona", "copiloto", "base"]) })).max(80),
-  criterios: z.array(z.object({ id: z.string().max(40), nombre: texto(80), peso: z.number().int().min(1).max(5) })).max(8),
-  opciones: z.array(z.object({
-    ideaId: z.string().max(40), notas: z.record(z.string(), z.number().min(0).max(5)), favor: texto(400), contra: texto(400),
-  })).max(8),
-  decisionIdeaId: z.string().max(40).nullable(), razonDecision: texto(800), estrategia: texto(1200),
-  riesgos: z.array(z.object({ id: z.string().max(40), texto: texto(300), senal: texto(300), respuesta: texto(300) })).max(12),
-  planB: texto(1000), disparadorPlanB: texto(400),
-}).partial().strict();
+const PROPUESTAS = ["diagnostico", "salidas", "ejecucion"] as const;
+type Propuesta = (typeof PROPUESTAS)[number];
 
-const CAMPOS_GRATIS = new Set(["relato", "situacion", "importancia"]);
+/** Pide a la IA lo que necesita el paso. Si ya existe y nadie pidió ajustar, lo devuelve sin gastar. */
+export async function generar<T extends Propuesta>(casoId: string, tarea: T, ajuste?: string): Promise<Respuesta<{ resultado: Resultado<T> }>> {
+  const { sesion, caso } = await casoPropio(casoId);
+  if (!PROPUESTAS.includes(tarea)) return { ok: false, error: "Tarea no válida." };
+  const t = caso.trabajo;
+  if (tarea !== "diagnostico" && !caso.desbloqueadoEn) return { ok: false, error: "Desbloquea el caso para seguir." };
+  if (tarea === "salidas" && !causaRaiz(t)) return { ok: false, error: "Primero elige la causa." };
+  if (tarea === "ejecucion" && !t.decisionIdeaId) return { ok: false, error: "Primero elige una salida." };
 
-export async function guardarTrabajo(casoId: string, cambios: unknown): Promise<Respuesta> {
-  const { caso } = await casoPropio(casoId);
-  const r = parche.safeParse(cambios);
-  if (!r.success) return { ok: false, error: "No pudimos guardar: revisa el largo del texto." };
-  if (!caso.desbloqueadoEn && Object.keys(r.data).some((k) => !CAMPOS_GRATIS.has(k)))
-    return { ok: false, error: "Desbloquea el caso para seguir." };
+  const nota = texto(800).safeParse(ajuste ?? "");
+  if (!nota.success) return { ok: false, error: "El texto es demasiado largo." };
+  if (!nota.data && t.copiloto[tarea]) return { ok: true, resultado: t.copiloto[tarea] as Resultado<T> };
 
-  const titulo = r.data.situacion?.trim();
+  try {
+    await verificarCuota(sesion.id, casoId, !!caso.desbloqueadoEn);
+    const pedido = nota.data ? `La persona agrega esto: ${nota.data}\nTenlo en cuenta y vuelve a proponer.` : "";
+    const resultado = await consultar(tarea, contextoCaso(caso), pedido, { usuarioId: sesion.id, casoId });
+    const cambios: Partial<Caso> = {};
+    let extra: Partial<Trabajo> = {};
+    if (tarea === "diagnostico") {
+      const d = resultado as Resultado<"diagnostico">;
+      cambios.titulo = d.titulo.slice(0, 90); cambios.categoria = d.categoria; cambios.urgencia = d.urgencia;
+      extra = { situacion: d.situacion, importancia: d.importancia };
+    }
+    await db.update(casos).set({
+      ...cambios,
+      trabajo: sql`jsonb_set(${casos.trabajo} || ${JSON.stringify(extra)}::jsonb, ${`{copiloto,${tarea}}`}::text[], ${JSON.stringify(resultado)}::jsonb)`,
+      ultimaActividad: new Date(),
+    }).where(eq(casos.id, casoId));
+    refrescar(casoId);
+    return { ok: true, resultado };
+  } catch (e) {
+    if (e instanceof ErrorCopiloto) return { ok: false, error: e.message };
+    throw e;
+  }
+}
+
+/** Avanza el caso y guarda la elección. Cambiar de opinión invalida lo que dependía de ella. */
+async function aplicar(casoId: string, etapa: number, cambios: Partial<Trabajo>, invalida: Propuesta[]) {
+  const quitar = invalida.map((k) => sql`#- ${`{copiloto,${k}}`}::text[]`);
+  const base = sql`${casos.trabajo} || ${JSON.stringify(cambios)}::jsonb`;
   await db.update(casos).set({
-    // Une a nivel de campo en la base: dos guardados seguidos no se pisan.
-    trabajo: sql`${casos.trabajo} || ${JSON.stringify(r.data)}::jsonb`,
-    ...(titulo ? { titulo: titulo.slice(0, 90) } : {}),
-    ultimaActividad: new Date(),
+    trabajo: sql.join([base, ...quitar], sql` `),
+    etapa: sql`greatest(${casos.etapa}, ${etapa})`, ultimaActividad: new Date(),
   }).where(eq(casos.id, casoId));
+  refrescar(casoId);
+}
+
+export async function elegirProblema(casoId: string, elegido: string): Promise<Respuesta> {
+  const { caso } = await casoPropio(casoId);
+  const r = texto(600).min(8, "Elige una opción o escribe la tuya.").safeParse(elegido);
+  if (!r.success) return { ok: false, error: r.error.issues[0].message };
+  const cambio = r.data !== caso.trabajo.definicionFinal;
+  await aplicar(casoId, 2, { definicionFinal: r.data }, cambio && caso.trabajo.definicionFinal ? ["salidas", "ejecucion"] : []);
   return { ok: true };
 }
 
-function faltaEnEtapaEjecutable(caso: Caso, ps: { prioridad: string }[]): string | null {
-  if (caso.etapa === 7 && !caso.indicador) return "Define y guarda la meta.";
-  if (caso.etapa === 8) {
-    if (ps.length < 3) return "Tu plan necesita al menos 3 pasos.";
-    if (!ps.some((p) => p.prioridad === "A")) return "Marca al menos un paso como prioridad A.";
-  }
-  return null;
+export async function elegirCausa(casoId: string, elegido: { texto: string; tipo: "hecho" | "suposicion"; porQue: string[] }): Promise<Respuesta<{ requierePago: boolean }>> {
+  const { caso } = await casoPropio(casoId);
+  const r = z.object({ texto: texto(400).min(5, "Elige una opción o escribe la tuya."), tipo: z.enum(["hecho", "suposicion"]), porQue: z.array(texto(300)).max(6) }).safeParse(elegido);
+  if (!r.success) return { ok: false, error: r.error.issues[0].message };
+  const previa = causaRaiz(caso.trabajo);
+  const cambio = !!previa && previa.texto !== r.data.texto;
+  const causa = { id: randomUUID(), texto: r.data.texto, evidencia: r.data.tipo, porQue: r.data.porQue, esRaiz: true };
+  await aplicar(casoId, caso.desbloqueadoEn ? 3 : 2, { causas: [causa] }, cambio ? ["salidas", "ejecucion"] : []);
+  await registrar(casoId, "etapa", `Elegiste la causa: ${r.data.texto}`);
+  return { ok: true, requierePago: !caso.desbloqueadoEn };
 }
 
-export async function avanzarEtapa(casoId: string): Promise<Respuesta<{ etapa: number; requierePago?: boolean }>> {
+export async function elegirSalida(casoId: string, elegido: { texto: string; razon: string; ideas: string[] }): Promise<Respuesta> {
   const { caso } = await casoPropio(casoId);
-  const faltas = faltantes(caso.etapa, caso.trabajo);
-  if (faltas.length) return { ok: false, error: faltas[0].mensaje };
+  if (!caso.desbloqueadoEn) return { ok: false, error: "Desbloquea el caso para seguir." };
+  const r = z.object({ texto: texto(300).min(5, "Elige una opción o escribe la tuya."), razon: texto(600), ideas: z.array(texto(300)).max(40) }).safeParse(elegido);
+  if (!r.success) return { ok: false, error: r.error.issues[0].message };
+  const previa = salidaElegida(caso.trabajo);
+  const id = randomUUID();
+  const ideas = [{ id, texto: r.data.texto, origen: "copiloto" as const }, ...r.data.ideas.filter((x) => x !== r.data.texto).map((x) => ({ id: randomUUID(), texto: x, origen: "copiloto" as const }))];
+  await aplicar(casoId, 4, { ideas, decisionIdeaId: id, razonDecision: r.data.razon }, previa && previa.texto !== r.data.texto ? ["ejecucion"] : []);
+  await registrar(casoId, "etapa", `Elegiste la salida: ${r.data.texto}`);
+  return { ok: true };
+}
 
-  const falta = faltaEnEtapaEjecutable(caso, await pasosDe(casoId));
-  if (falta) return { ok: false, error: falta };
+const planFinal = z.object({
+  indicador: texto(160).min(3, "Di qué vas a medir."),
+  unidad: texto(40).min(1, "Falta la unidad de tu meta."),
+  lineaBase: z.number({ error: "Escribe el número de hoy." }).finite(),
+  objetivo: z.number({ error: "Escribe el número al que quieres llegar." }).finite(),
+  fechaObjetivo: fecha,
+  pasos: z.array(z.object({
+    titulo: texto(200).min(3, "Hay un paso sin descripción."),
+    criterioHecho: texto(300).min(3, "Hay un paso sin criterio."),
+    prioridad: z.enum(["A", "B", "C", "D"]),
+    venceEn: fecha,
+    depende: z.number().int().nullable(),
+  })).min(3, "Tu plan necesita al menos 3 pasos.").max(14),
+  compromiso: texto(600).min(10, "Escribe tu compromiso."),
+  ritmoDias: z.union([z.literal(3), z.literal(7), z.literal(14)]),
+  companeroNombre: texto(120).optional(),
+  companeroEmail: z.union([z.literal(""), z.email("El correo del compañero no es válido.")]).optional(),
+}).refine((m) => m.lineaBase !== m.objetivo, { message: "La meta debe ser distinta del valor de hoy." });
 
-  if (caso.etapa === ETAPA_GRATIS && !caso.desbloqueadoEn) return { ok: true, etapa: caso.etapa, requierePago: true };
-  if (caso.etapa >= 9) return { ok: false, error: "Firma tu compromiso para empezar." };
+export async function empezarPlan(casoId: string, datos: unknown): Promise<Respuesta> {
+  const { caso, sesion } = await casoPropio(casoId);
+  if (caso.estado !== "metodo" || caso.etapa !== 4) return { ok: false, error: "Termina los pasos anteriores." };
+  const r = planFinal.safeParse(datos);
+  if (!r.success) return { ok: false, error: r.error.issues[0].message };
+  const d = r.data;
+  if (d.fechaObjetivo <= hoyChile()) return { ok: false, error: "La fecha de la meta debe ser futura." };
 
-  await db.update(casos).set({ etapa: sql`greatest(${casos.etapa}, ${caso.etapa + 1})`, ultimaActividad: new Date() }).where(eq(casos.id, casoId));
-  await registrar(casoId, "etapa", `Completaste la etapa ${caso.etapa}.`);
+  const e = caso.trabajo.copiloto.ejecucion as Resultado<"ejecucion"> | undefined;
+  const ids = d.pasos.map(() => randomUUID());
+  await db.update(casos).set({
+    indicador: d.indicador, unidad: d.unidad, lineaBase: d.lineaBase, objetivo: d.objetivo, fechaObjetivo: d.fechaObjetivo,
+    trabajo: sql`${casos.trabajo} || ${JSON.stringify({
+      estrategia: e?.estrategia ?? "", planB: e?.plan_b ?? "", disparadorPlanB: e?.disparador ?? "",
+      riesgos: (e?.riesgos ?? []).map((x) => ({ id: randomUUID(), ...x })),
+    })}::jsonb`,
+  }).where(eq(casos.id, casoId));
+  await db.insert(pasos).values(d.pasos.map((p, i) => ({
+    id: ids[i], casoId, orden: i + 1, titulo: p.titulo, criterioHecho: p.criterioHecho, prioridad: p.prioridad,
+    responsable: sesion.nombre, venceEn: p.venceEn, venceOriginal: p.venceEn,
+    dependeDe: p.depende && p.depende >= 1 && p.depende <= i ? ids[p.depende - 1] : null,
+  })));
+  await registrar(casoId, "paso", `Tu plan tiene ${d.pasos.length} pasos.`);
+  await iniciarEjecucion({ ...caso }, sesion, {
+    responsable: sesion.nombre, compromiso: d.compromiso, ritmoDias: d.ritmoDias,
+    companeroNombre: d.companeroNombre, companeroEmail: d.companeroEmail,
+  });
   refrescar(casoId);
-  return { ok: true, etapa: caso.etapa + 1 };
+  return { ok: true };
 }
 
 export async function usarCredito(casoId: string): Promise<Respuesta> {
@@ -139,50 +206,17 @@ export async function comprar(planId: string, casoId: string | null): Promise<Re
 
 export async function pedirCopiloto<T extends TareaId>(casoId: string, tarea: T, extra?: string): Promise<Respuesta<{ resultado: Resultado<T> }>> {
   const { sesion, caso } = await casoPropio(casoId);
-  const desbloqueado = !!caso.desbloqueadoEn;
-  if (!desbloqueado && tarea !== "encuadrar") return { ok: false, error: "Desbloquea el caso para usar el copiloto aquí." };
-  if (tarea === "ideas" && ideasPropias(caso.trabajo) < MIN_IDEAS_PROPIAS_PARA_COPILOTO)
-    return { ok: false, error: `Escribe tus primeras ${MIN_IDEAS_PROPIAS_PARA_COPILOTO} ideas: las tuyas abren el camino.` };
-  if ((tarea === "desafiar" || tarea === "premortem") && !caso.trabajo.decisionIdeaId)
-    return { ok: false, error: "Primero elige una opción." };
-  if (tarea === "plan" && !caso.indicador) return { ok: false, error: "Primero guarda la meta." };
-
-  const pedidoExtra = texto(800).safeParse(extra ?? "");
-  if (!pedidoExtra.success) return { ok: false, error: "El texto es demasiado largo." };
-
+  if (tarea !== "destrabar") return { ok: false, error: "Tarea no válida." };
+  const pedido = texto(800).safeParse(extra ?? "");
+  if (!pedido.success) return { ok: false, error: "El texto es demasiado largo." };
   try {
-    await verificarCuota(sesion.id, casoId, desbloqueado);
-    const ps = await pasosDe(casoId);
-    const rs = await revisionesDe(casoId);
-    const cuantas = Math.max(5, Math.min(12, MIN_IDEAS - caso.trabajo.ideas.length + 3));
-    const pedido = tarea === "ideas" ? `Propón ${cuantas} ideas nuevas.\n${pedidoExtra.data}` : pedidoExtra.data;
-    const resultado = await consultar(tarea, contextoCaso(caso, ps, rs), pedido, { usuarioId: sesion.id, casoId });
-    await db.update(casos).set({
-      trabajo: sql`jsonb_set(${casos.trabajo}, ${`{copiloto,${tarea}}`}::text[], ${JSON.stringify(resultado)}::jsonb)`,
-    }).where(eq(casos.id, casoId));
+    await verificarCuota(sesion.id, casoId, !!caso.desbloqueadoEn);
+    const resultado = await consultar(tarea, contextoCaso(caso, await pasosDe(casoId), await revisionesDe(casoId)), pedido.data, { usuarioId: sesion.id, casoId });
     return { ok: true, resultado };
   } catch (e) {
     if (e instanceof ErrorCopiloto) return { ok: false, error: e.message };
     throw e;
   }
-}
-
-const meta = z.object({
-  indicador: texto(160).min(3, "Di qué vas a medir."),
-  unidad: texto(40).min(1, "Falta la unidad."),
-  lineaBase: z.number({ error: "Escribe el número de hoy." }).finite(),
-  objetivo: z.number({ error: "Escribe el número al que quieres llegar." }).finite(),
-  fechaObjetivo: fecha,
-}).refine((m) => m.lineaBase !== m.objetivo, { message: "El objetivo debe ser distinto de la línea base." });
-
-export async function guardarMeta(casoId: string, datos: unknown): Promise<Respuesta> {
-  await casoPropio(casoId);
-  const r = meta.safeParse(datos);
-  if (!r.success) return { ok: false, error: r.error.issues[0].message };
-  if (r.data.fechaObjetivo <= hoyChile()) return { ok: false, error: "La fecha debe ser futura." };
-  await db.update(casos).set(r.data).where(eq(casos.id, casoId));
-  refrescar(casoId);
-  return { ok: true };
 }
 
 const nuevoPaso = z.object({
@@ -207,49 +241,6 @@ export async function agregarPaso(casoId: string, datos: unknown): Promise<Respu
   });
   await registrar(casoId, "paso", `Agregaste el paso «${r.data.titulo}».`);
   await actualizarSalud(casoId);
-  refrescar(casoId);
-  return { ok: true };
-}
-
-/** Carga el plan que propuso el copiloto, reemplazando solo si no hay pasos. */
-export async function aplicarPlanCopiloto(casoId: string): Promise<Respuesta> {
-  const { caso, sesion } = await casoPropio(casoId);
-  const plan = caso.trabajo.copiloto.plan as Resultado<"plan"> | undefined;
-  if (!plan) return { ok: false, error: "Primero pide el plan al copiloto." };
-  if ((await pasosDe(casoId)).length) return { ok: false, error: "Ya tienes pasos: agrégalos de a uno." };
-  const hoy = hoyChile();
-  const responsable = await responsableDe(caso, sesion.nombre);
-  const ids = plan.pasos.map(() => randomUUID());
-  await db.insert(pasos).values(plan.pasos.map((p, i) => {
-    const vence = sumarDias(hoy, Math.max(1, Math.round(p.dias_desde_hoy)));
-    const previo = p.depende_del_paso;
-    return {
-      id: ids[i], casoId, orden: i + 1, titulo: p.titulo.slice(0, 200), criterioHecho: p.criterio_hecho.slice(0, 300),
-      prioridad: p.prioridad, responsable, venceEn: vence, venceOriginal: vence,
-      dependeDe: previo && previo >= 1 && previo <= i ? ids[previo - 1] : null,
-    };
-  }));
-  await registrar(casoId, "paso", `Cargaste un plan de ${plan.pasos.length} pasos.`);
-  await actualizarSalud(casoId);
-  refrescar(casoId);
-  return { ok: true };
-}
-
-const compromiso = z.object({
-  responsable: texto(120).min(2, "Escribe tu nombre."),
-  compromiso: texto(600).min(15, "Escribe tu compromiso con tus palabras."),
-  ritmoDias: z.union([z.literal(3), z.literal(7), z.literal(14)]),
-  companeroNombre: texto(120).optional(),
-  companeroEmail: z.union([z.literal(""), z.email("Ese correo no es válido.")]).optional(),
-});
-
-export async function firmarCompromiso(casoId: string, datos: unknown): Promise<Respuesta> {
-  const { caso, sesion } = await casoPropio(casoId);
-  if (caso.etapa !== 9) return { ok: false, error: "Termina las etapas anteriores." };
-  const r = compromiso.safeParse(datos);
-  if (!r.success) return { ok: false, error: r.error.issues[0].message };
-  await db.update(pasos).set({ responsable: r.data.responsable }).where(eq(pasos.casoId, casoId));
-  await iniciarEjecucion(caso, sesion, r.data);
   refrescar(casoId);
   return { ok: true };
 }
